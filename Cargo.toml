@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "crates/core/common",
+    "crates/core/shared-kernel",
+
+    "crates/features/salas/domain",
+    "crates/features/salas/application",
+    "crates/features/salas/infrastructure",
+    "crates/features/salas/api",
+]
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+chrono = "0.4"
+uuid = { version = "1", features = ["v4"] }

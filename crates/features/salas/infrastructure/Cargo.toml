@@ -1,0 +1,10 @@
+[package]
+name = "salas-infrastructure"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+salas-domain = { path = "../domain" }
+salas-application = { path = "../application" }
+tokio = { workspace = true }
+async-trait = { workspace = true }

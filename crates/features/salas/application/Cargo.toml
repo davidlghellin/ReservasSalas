@@ -1,0 +1,9 @@
+[package]
+name = "salas-application"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+salas-domain = { path = "../domain" }
+async-trait = { workspace = true }
+uuid = { workspace = true }
