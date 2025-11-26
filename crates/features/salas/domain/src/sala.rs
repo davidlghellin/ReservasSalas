@@ -1,53 +1,44 @@
 use crate::error::SalaError;
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
-const MAX_NOMBRE_LENGTH: usize = 100;
-const MAX_CAPACIDAD: u32 = 1000;
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Validate)]
 pub struct Sala {
     pub id: String,
+    #[validate(length(min = 1, max = 100))]
     pub nombre: String,
+    #[validate(range(min = 1, max = 1000))]
     pub capacidad: u32,
     pub activa: bool,
 }
 
 impl Sala {
     pub fn new(id: String, nombre: String, capacidad: u32) -> Result<Self, SalaError> {
-        Self::validar_nombre(&nombre)?;
-        Self::validar_capacidad(capacidad)?;
-
-        Ok(Self {
-            id,
-            nombre: nombre.trim().to_string(),
-            capacidad,
-            activa: true,
-        })
-    }
-
-    fn validar_nombre(nombre: &str) -> Result<(), SalaError> {
-        if nombre.trim().is_empty() {
+        let nombre_trim = nombre.trim().to_string();
+        if nombre_trim.is_empty() {
             return Err(SalaError::NombreVacio);
         }
-        if nombre.len() > MAX_NOMBRE_LENGTH {
-            return Err(SalaError::NombreDemasiadoLargo);
-        }
-        Ok(())
-    }
 
-    fn validar_capacidad(capacidad: u32) -> Result<(), SalaError> {
-        if capacidad == 0 || capacidad > MAX_CAPACIDAD {
+        let sala = Self {
+            id,
+            nombre: nombre_trim.clone(),
+            capacidad,
+            activa: true,
+        };
+
+        if let Err(e) = sala.validate() {
+            // mapear errores de campo a tus variantes
+            if e.field_errors().contains_key("nombre") {
+                return Err(SalaError::NombreDemasiadoLargo);
+            }
+            if e.field_errors().contains_key("capacidad") {
+                return Err(SalaError::CapacidadInvalida);
+            }
+            // fallback: mapear a un error genérico si tu enum lo permite
             return Err(SalaError::CapacidadInvalida);
         }
-        Ok(())
-    }
 
-    pub fn desactivar(&mut self) {
-        self.activa = false;
-    }
-
-    pub fn activar(&mut self) {
-        self.activa = true;
+        Ok(sala)
     }
 
     pub fn id(&self) -> &str {
@@ -64,6 +55,14 @@ impl Sala {
 
     pub fn esta_activa(&self) -> bool {
         self.activa
+    }
+
+    pub fn activar(&mut self) {
+        self.activa = true;
+    }
+
+    pub fn desactivar(&mut self) {
+        self.activa = false;
     }
 }
 
