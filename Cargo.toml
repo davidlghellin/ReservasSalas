@@ -6,6 +6,7 @@ members = [
     "crates/features/salas/api",
     "crates/app",
     "crates/app-cli",
+    "crates/app-tui",
 ]
 resolver = "2"
 
