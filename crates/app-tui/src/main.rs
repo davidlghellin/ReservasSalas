@@ -27,10 +27,10 @@ async fn main() -> std::io::Result<()> {
     let mut state = AppState::Menu;
 
     loop {
-        terminal.draw(|f| match &state {
+        let _ = terminal.draw(|f| match &state {
             AppState::Menu => {
                 let block = Block::default().title("Menú").borders(Borders::ALL);
-                let items = vec!["1. Sala", "q. Salir"];
+                let items = ["1. Sala", "q. Salir"];
                 let paragraph = Paragraph::new(items.join("\n"))
                     .block(block)
                     .alignment(Alignment::Left);

@@ -7,6 +7,7 @@ members = [
     "crates/app",
     "crates/app-cli",
     "crates/app-tui",
+    "crates/app-web",
 ]
 resolver = "2"
 
@@ -18,6 +19,16 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 axum = "0.8.7"
 tower = "0.4"
-tower-http = { version = "0.5", features = ["trace", "cors"] }
+tower-http = { version = "0.5", features = ["trace", "cors", "fs"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+chrono = "0.4"
+askama = "0.12"
+
+[profile.release]
+opt-level = "z"        # "z" = optimizar para tamaño (más agresivo que "s")
+lto = true             # link-time optimization, reduce tamaño y mejora rendimiento
+codegen-units = 1      # menos paralelismo al compilar, pero mejor optimización
+panic = "abort"        # no genera info para unwinding del panic -> menos código
+strip = "symbols"      # quita símbolos (si tu versión de Rust lo soporta)
+debug = false          # sin info de debug en release
