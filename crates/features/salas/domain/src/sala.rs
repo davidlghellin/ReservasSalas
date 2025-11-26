@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::error::SalaError;
+use serde::{Deserialize, Serialize};
 
 const MAX_NOMBRE_LENGTH: usize = 100;
 const MAX_CAPACIDAD: u32 = 1000;
@@ -73,11 +73,7 @@ mod tests {
 
     #[test]
     fn crear_sala_valida() {
-        let sala = Sala::new(
-            "123".to_string(),
-            "Sala de Conferencias".to_string(),
-            10,
-        );
+        let sala = Sala::new("123".to_string(), "Sala de Conferencias".to_string(), 10);
 
         assert!(sala.is_ok());
         let sala = sala.unwrap();
@@ -144,11 +140,7 @@ mod tests {
 
     #[test]
     fn nombre_trimea_espacios() {
-        let sala = Sala::new(
-            "123".to_string(),
-            "  Sala con espacios  ".to_string(),
-            10,
-        ).unwrap();
+        let sala = Sala::new("123".to_string(), "  Sala con espacios  ".to_string(), 10).unwrap();
 
         assert_eq!(sala.nombre(), "Sala con espacios");
     }

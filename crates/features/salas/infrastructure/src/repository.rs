@@ -26,26 +26,34 @@ impl Default for InMemorySalaRepository {
 #[async_trait]
 impl SalaRepository for InMemorySalaRepository {
     async fn guardar(&self, sala: &Sala) -> Result<(), SalaError> {
-        let mut store = self.store.write()
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| SalaError::ErrorRepositorio(format!("Error al escribir: {}", e)))?;
         store.insert(sala.id.clone(), sala.clone());
         Ok(())
     }
 
     async fn obtener(&self, id: &str) -> Result<Option<Sala>, SalaError> {
-        let store = self.store.read()
+        let store = self
+            .store
+            .read()
             .map_err(|e| SalaError::ErrorRepositorio(format!("Error al leer: {}", e)))?;
         Ok(store.get(id).cloned())
     }
 
     async fn listar(&self) -> Result<Vec<Sala>, SalaError> {
-        let store = self.store.read()
+        let store = self
+            .store
+            .read()
             .map_err(|e| SalaError::ErrorRepositorio(format!("Error al leer: {}", e)))?;
         Ok(store.values().cloned().collect())
     }
 
     async fn actualizar(&self, sala: &Sala) -> Result<(), SalaError> {
-        let mut store = self.store.write()
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| SalaError::ErrorRepositorio(format!("Error al escribir: {}", e)))?;
         store.insert(sala.id.clone(), sala.clone());
         Ok(())
