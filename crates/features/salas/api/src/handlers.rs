@@ -54,6 +54,7 @@ pub async fn crear_sala(
 pub async fn listar_salas(
     State(service): State<SharedSalaService>,
 ) -> Result<Json<Vec<SalaResponse>>, AppError> {
+    info!("Listamos salas");
     let salas = service.listar_salas().await?;
     let response: Vec<SalaResponse> = salas.iter().map(Into::into).collect();
     Ok(Json(response))
