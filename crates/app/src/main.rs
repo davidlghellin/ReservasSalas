@@ -1,5 +1,4 @@
 use axum::http::Method;
-use axum::Router;
 use salas_api::handlers::SharedSalaService;
 use salas_api::routes::salas_routes;
 use salas_application::SalaServiceImpl;
@@ -34,8 +33,8 @@ async fn main() {
 
     // Crear el router con las rutas
     // salas_routes ahora recibe SharedSalaService
-    let app = Router::new()
-        .nest("/salas", salas_routes(shared_service))
+    let app = axum::Router::new()
+        .nest("/api", salas_routes(shared_service))
         .layer(cors);
 
     // Iniciar el servidor
