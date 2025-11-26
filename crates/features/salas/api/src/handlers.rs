@@ -14,7 +14,10 @@ pub async fn crear_sala(
     State(service): State<SharedSalaService>,
     Json(request): Json<CrearSalaRequest>,
 ) -> Result<(StatusCode, Json<SalaResponse>), AppError> {
-    info!("Creando sala: nombre={}, capacidad={}", request.nombre, request.capacidad);
+    info!(
+        "Creando sala: nombre={}, capacidad={}",
+        request.nombre, request.capacidad
+    );
 
     let sala = service
         .crear_sala(request.nombre, request.capacidad)
@@ -74,16 +77,26 @@ impl From<SalaError> for AppError {
 }
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, message) = match self.0 {
-            SalaError::NombreVacio
-            | SalaError::NombreDemasiadoLargo
-            | SalaError::CapacidadInvalida => (StatusCode::BAD_REQUEST, self.0.to_string()),
-            SalaError::NoEncontrada => (StatusCode::NOT_FOUND, self.0.to_string()),
-            SalaError::ErrorRepositorio(_) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, self.0.to_string())
-            }
-        };
+        match self.0 {
+            SalaError::Validacion(msgs) => (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({ "errors": msgs })),
+            )
+                .into_response(),
+            _ => {
+                let (status, message) = match self.0 {
+                    SalaError::NombreVacio
+                    | SalaError::NombreDemasiadoLargo
+                    | SalaError::CapacidadInvalida => (StatusCode::BAD_REQUEST, self.0.to_string()),
+                    SalaError::NoEncontrada => (StatusCode::NOT_FOUND, self.0.to_string()),
+                    SalaError::ErrorRepositorio(_) => {
+                        (StatusCode::INTERNAL_SERVER_ERROR, self.0.to_string())
+                    }
+                    _ => unreachable!(),
+                };
 
-        (status, Json(serde_json::json!({ "error": message }))).into_response()
+                (status, Json(serde_json::json!({ "error": message }))).into_response()
+            }
+        }
     }
 }
