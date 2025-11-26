@@ -1,14 +1,19 @@
 use crate::error::{convertir_errores_validacion, SalaError};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use validator::Validate;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Validate, ToSchema)]
 pub struct Sala {
+    #[schema(example = "550e8400-e29b-41d4-a716-446655440000")]
     pub id: String,
     #[validate(length(min = 1, max = 100))]
+    #[schema(example = "Sala de Conferencias", min_length = 1, max_length = 100)]
     pub nombre: String,
     #[validate(range(min = 1, max = 1000, message = "Sobrepasa la capacidad"))]
+    #[schema(example = 50, minimum = 1, maximum = 1000)]
     pub capacidad: u32,
+    #[schema(example = true)]
     pub activa: bool,
 }
 

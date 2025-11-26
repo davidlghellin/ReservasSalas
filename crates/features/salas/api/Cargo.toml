@@ -26,3 +26,7 @@ thiserror = "2.0"
 
 # Logging (opcional pero recomendado)
 tracing = "0.1"
+
+# OpenAPI / Swagger
+utoipa = { version = "5.3", features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { version = "9.0", features = ["axum"] }

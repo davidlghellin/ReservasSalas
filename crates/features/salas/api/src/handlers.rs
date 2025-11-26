@@ -1,4 +1,4 @@
-use crate::{CrearSalaRequest, SalaResponse};
+use crate::dtos::{CrearSalaRequest, ErrorResponse, SalaResponse, ValidationErrorResponse};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -10,6 +10,17 @@ use tracing::log::{debug, error, info};
 
 pub type SharedSalaService = Arc<dyn SalaService + Send + Sync>;
 
+/// Crear una nueva sala
+#[utoipa::path(
+    post,
+    path = "/salas",
+    request_body = CrearSalaRequest,
+    responses(
+        (status = 201, description = "Sala creada exitosamente", body = SalaResponse),
+        (status = 400, description = "Errores de validación", body = ValidationErrorResponse)
+    ),
+    tag = "salas"
+)]
 pub async fn crear_sala(
     State(service): State<SharedSalaService>,
     Json(request): Json<CrearSalaRequest>,
@@ -31,6 +42,15 @@ pub async fn crear_sala(
     Ok((StatusCode::CREATED, Json(sala.into())))
 }
 
+/// Listar todas las salas
+#[utoipa::path(
+    get,
+    path = "/salas",
+    responses(
+        (status = 200, description = "Lista de salas", body = Vec<SalaResponse>)
+    ),
+    tag = "salas"
+)]
 pub async fn listar_salas(
     State(service): State<SharedSalaService>,
 ) -> Result<Json<Vec<SalaResponse>>, AppError> {
@@ -39,6 +59,19 @@ pub async fn listar_salas(
     Ok(Json(response))
 }
 
+/// Obtener una sala por ID
+#[utoipa::path(
+    get,
+    path = "/salas/{id}",
+    params(
+        ("id" = String, Path, description = "ID de la sala")
+    ),
+    responses(
+        (status = 200, description = "Sala encontrada", body = SalaResponse),
+        (status = 404, description = "Sala no encontrada", body = ErrorResponse)
+    ),
+    tag = "salas"
+)]
 pub async fn obtener_sala(
     State(service): State<SharedSalaService>,
     Path(id): Path<String>,
@@ -51,6 +84,19 @@ pub async fn obtener_sala(
     Ok(Json(response))
 }
 
+/// Activar una sala
+#[utoipa::path(
+    put,
+    path = "/salas/{id}/activar",
+    params(
+        ("id" = String, Path, description = "ID de la sala")
+    ),
+    responses(
+        (status = 200, description = "Sala activada", body = SalaResponse),
+        (status = 404, description = "Sala no encontrada", body = ErrorResponse)
+    ),
+    tag = "salas"
+)]
 pub async fn activar_sala(
     State(service): State<SharedSalaService>,
     Path(id): Path<String>,
@@ -60,6 +106,19 @@ pub async fn activar_sala(
     Ok(Json(response))
 }
 
+/// Desactivar una sala
+#[utoipa::path(
+    put,
+    path = "/salas/{id}/desactivar",
+    params(
+        ("id" = String, Path, description = "ID de la sala")
+    ),
+    responses(
+        (status = 200, description = "Sala desactivada", body = SalaResponse),
+        (status = 404, description = "Sala no encontrada", body = ErrorResponse)
+    ),
+    tag = "salas"
+)]
 pub async fn desactivar_sala(
     State(service): State<SharedSalaService>,
     Path(id): Path<String>,
