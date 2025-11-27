@@ -1,0 +1,26 @@
+{
+  "productName": "Reservas Salas",
+  "version": "0.1.0",
+  "identifier": "com.reservas.salas",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Reservas de Salas",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": false,
+    "targets": "all"
+  }
+}

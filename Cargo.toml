@@ -9,6 +9,7 @@ members = [
     "crates/app-cli",
     "crates/app-tui",
     "crates/app-web",
+    "crates/app-desktop/src-tauri",
 ]
 resolver = "2"
 
@@ -29,6 +30,8 @@ tonic = "0.12"
 tonic-build = "0.12"
 tonic-reflection = "0.12"
 prost = "0.13"
+tauri = "2.1"
+tauri-build = "2.0"
 
 [profile.release]
 opt-level = "z"        # "z" = optimizar para tamaño (más agresivo que "s")
