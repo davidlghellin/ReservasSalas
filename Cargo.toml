@@ -10,6 +10,7 @@ members = [
     "crates/app-tui",
     "crates/app-web",
     "crates/app-desktop/src-tauri",
+    "crates/app-desktop-dioxus",
 ]
 resolver = "2"
 

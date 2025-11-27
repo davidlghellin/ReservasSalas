@@ -1,0 +1,16 @@
+[application]
+name = "Reservas Salas - Dioxus"
+default_platform = "desktop"
+
+[desktop]
+title = "Reservas Salas"
+width = 1200
+height = 800
+resizable = true
+fullscreen = false
+
+[bundle]
+identifier = "com.reservas.salas.dioxus"
+publisher = "Reservas Salas"
+icon = ["assets/icon.png"]
+resources = ["assets"]
