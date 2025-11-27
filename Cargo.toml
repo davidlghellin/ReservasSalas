@@ -4,6 +4,7 @@ members = [
     "crates/features/salas/application",
     "crates/features/salas/infrastructure",
     "crates/features/salas/api",
+    "crates/features/salas/grpc",
     "crates/app",
     "crates/app-cli",
     "crates/app-tui",
@@ -24,6 +25,10 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 chrono = "0.4"
 askama = "0.12"
+tonic = "0.12"
+tonic-build = "0.12"
+tonic-reflection = "0.12"
+prost = "0.13"
 
 [profile.release]
 opt-level = "z"        # "z" = optimizar para tamaño (más agresivo que "s")
