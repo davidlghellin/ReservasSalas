@@ -1,0 +1,209 @@
+name: Build Desktop Apps
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build-desktop:
+    name: Build ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            rust_target: x86_64-apple-darwin
+            artifact_name: app-desktop-macos-x64
+            binary_name: app-desktop
+          - platform: macos-latest
+            rust_target: aarch64-apple-darwin
+            artifact_name: app-desktop-macos-arm64
+            binary_name: app-desktop
+          - platform: ubuntu-22.04
+            rust_target: x86_64-unknown-linux-gnu
+            artifact_name: app-desktop-linux-x64
+            binary_name: app-desktop
+          - platform: windows-latest
+            rust_target: x86_64-pc-windows-msvc
+            artifact_name: app-desktop-windows-x64
+            binary_name: app-desktop.exe
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './crates/app-desktop/src-tauri -> target'
+          key: ${{ matrix.platform }}-${{ matrix.rust_target }}
+
+      - name: Install dependencies (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Build binary
+        run: |
+          cd crates/app-desktop/src-tauri
+          cargo build --release --target ${{ matrix.rust_target }}
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.rust_target }}/release/${{ matrix.binary_name }} dist/
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/${{ matrix.binary_name }}
+          retention-days: 30
+
+  build-installers:
+    name: Build Installer - ${{ matrix.platform }}
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-desktop
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            installer_ext: dmg
+          - platform: ubuntu-22.04
+            installer_ext: deb
+          - platform: windows-latest
+            installer_ext: msi
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2.0"
+
+      - name: Build installer
+        run: |
+          cd crates/app-desktop/src-tauri
+          cargo tauri build
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.platform }}
+          path: |
+            crates/app-desktop/src-tauri/target/release/bundle/**/
+          retention-days: 90
+
+  create-release:
+    name: Create GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-desktop, build-installers]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job para Android (opcional, solo si se ejecuta manualmente)
+  build-android:
+    name: Build Android APK
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: |
+            aarch64-linux-android
+            armv7-linux-androideabi
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "ndk;25.2.9519653"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2.0"
+
+      - name: Initialize Tauri Android
+        run: |
+          cd crates/app-desktop/src-tauri
+          cargo tauri android init --ci
+
+      - name: Build APK
+        run: |
+          cd crates/app-desktop/src-tauri
+          cargo tauri android build --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-desktop-android
+          path: crates/app-desktop/src-tauri/gen/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30

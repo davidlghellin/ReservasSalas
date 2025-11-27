@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservas de Salas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Gestión de Salas</h1>
+        </header>
+
+        <main>
+            <!-- Formulario para crear sala -->
+            <section class="form-section">
+                <h2>➕ Crear Nueva Sala</h2>
+                <form id="crear-sala-form">
+                    <div class="form-group">
+                        <label for="nombre">Nombre:</label>
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            required
+                            placeholder="Ej: Sala Conferencias"
+                            maxlength="100"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="capacidad">Capacidad:</label>
+                        <input
+                            type="number"
+                            id="capacidad"
+                            name="capacidad"
+                            required
+                            min="1"
+                            max="1000"
+                            placeholder="Ej: 50"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Sala</button>
+                </form>
+            </section>
+
+            <!-- Lista de salas -->
+            <section class="salas-section">
+                <div class="salas-header">
+                    <h2>📋 Listado de Salas</h2>
+                    <button id="refresh-btn" class="btn btn-secondary">🔄 Actualizar</button>
+                </div>
+                <div id="salas-container" class="salas-grid">
+                    <!-- Las salas se cargarán aquí dinámicamente -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
