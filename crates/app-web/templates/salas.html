@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Salas - Sistema de Reservas{% endblock %}
+
+{% block content %}
+<h2>Lista de Salas</h2>
+
+<div class="actions">
+    <a href="/salas/nuevo" class="btn btn-primary">Crear Nueva Sala</a>
+</div>
+
+{% if salas.is_empty() %}
+<div class="empty-state">
+    <p>No hay salas registradas todavía.</p>
+    <a href="/salas/nuevo" class="btn btn-primary">Crear la primera</a>
+</div>
+{% else %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Capacidad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sala in salas %}
+        <tr>
+            <td>{{ sala.nombre }}</td>
+            <td>{{ sala.capacidad }} personas</td>
+            <td>
+                {% if sala.activa %}
+                <span class="badge badge-success">Activa</span>
+                {% else %}
+                <span class="badge badge-danger">Inactiva</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if sala.activa %}
+                <form method="post" action="/salas/{{ sala.id }}/desactivar" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Desactivar</button>
+                </form>
+                {% else %}
+                <form method="post" action="/salas/{{ sala.id }}/activar" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-success">Activar</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}

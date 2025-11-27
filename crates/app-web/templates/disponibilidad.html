@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Disponibilidad - Sistema de Reservas{% endblock %}
+
+{% block content %}
+<h2>Consulta de Disponibilidad</h2>
+
+<div class="info-message">
+    <p><strong>Próximamente:</strong> Aquí podrás consultar la disponibilidad de horarios por fecha.</p>
+    <p>Por ahora, puedes usar la API REST para consultar disponibilidad:</p>
+    <ul>
+        <li><strong>Endpoint:</strong> <code>GET /api/disponibilidad?fecha=YYYY-MM-DD</code></li>
+        <li><strong>Ejemplo:</strong> <a href="/api/disponibilidad?fecha=2025-11-25" target="_blank">/api/disponibilidad?fecha=2025-11-25</a></li>
+    </ul>
+</div>
+
+<div class="card">
+    <h3>Documentación API</h3>
+    <p>Para consultar la disponibilidad a través de la API REST, visita:</p>
+    <a href="/api/swagger-ui" class="btn">Ver Swagger UI</a>
+</div>
+{% endblock %}
