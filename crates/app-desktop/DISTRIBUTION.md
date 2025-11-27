@@ -175,6 +175,74 @@ Compila automáticamente para **Linux, macOS (x64 + ARM64) y Windows**:
 3. Crea GitHub Release automáticamente
 4. Sube todos los binarios e instaladores al release
 
+### 🧪 Probar GitHub Actions antes de crear un tag
+
+**Opción 1: Ejecutar manualmente (recomendado)**
+
+La forma más segura de probar:
+
+1. Ir a: `https://github.com/TU_USUARIO/ReservasSalas/actions`
+2. Seleccionar "Build Desktop Apps"
+3. Click "Run workflow"
+4. Seleccionar la rama
+5. Verificar que compila correctamente
+6. Descargar artifacts para probar
+
+**Ventajas:**
+- No crea tags ni releases
+- Compila en la nube
+- Puedes descargar los binarios generados
+
+**Opción 2: Tag de prueba**
+
+Crear un tag temporal para probar:
+
+```bash
+# Crear tag de prueba
+git tag v0.0.1-test
+git push origin v0.0.1-test
+
+# Verificar que el workflow funciona en GitHub Actions
+
+# Borrar tag de prueba si todo está bien
+git tag -d v0.0.1-test
+git push origin :refs/tags/v0.0.1-test
+
+# Borrar release con gh CLI
+gh release delete v0.0.1-test
+```
+
+**Opción 3: Probar localmente con `act`**
+
+```bash
+# Instalar act
+brew install act
+
+# Ver qué jobs se ejecutarían
+act -l
+
+# Simular push de tag
+act push --eventpath <(echo '{"ref":"refs/tags/v0.1.0"}')
+
+# O ejecutar un job específico
+act -j build-desktop
+```
+
+**Limitaciones de `act`:**
+- Solo simula, no sube artifacts reales
+- Puede tener problemas con cross-compilation
+- No crea releases en GitHub
+
+**Opción 4: Validar sintaxis del workflow**
+
+```bash
+# Instalar actionlint
+brew install actionlint
+
+# Validar el workflow
+actionlint .github/workflows/build-desktop.yml
+```
+
 ### Descargar binarios
 
 **Desde un Release:**
