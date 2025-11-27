@@ -20,7 +20,10 @@
     }
   },
   "bundle": {
-    "active": false,
-    "targets": "all"
+    "active": true,
+    "targets": "all",
+    "android": {
+      "minSdkVersion": 24
+    }
   }
 }
