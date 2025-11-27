@@ -117,6 +117,20 @@ fn App() -> Element {
         });
     };
 
+    // Handler para recargar salas
+    let recargar_handler = move |_| {
+        spawn(async move {
+            loading.set(true);
+            if let Ok(salas_data) = listar_salas().await {
+                salas.set(salas_data);
+                mensaje.set("✅ Salas actualizadas".to_string());
+            } else {
+                mensaje.set("❌ Error al actualizar salas".to_string());
+            }
+            loading.set(false);
+        });
+    };
+
     rsx! {
         style { {include_str!("../assets/style.css")} }
 
@@ -185,7 +199,15 @@ fn App() -> Element {
 
             // Lista de salas
             div { class: "salas-container",
-                h2 { "📋 Lista de Salas ({salas.read().len()})" }
+                div { class: "salas-header",
+                    h2 { "📋 Lista de Salas ({salas.read().len()})" }
+                    button {
+                        class: "btn btn-secondary",
+                        disabled: *loading.read(),
+                        onclick: recargar_handler,
+                        "🔄 Actualizar"
+                    }
+                }
 
                 if salas.read().is_empty() {
                     div { class: "empty-state",
