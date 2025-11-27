@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package sala;
+
+// Servicio de gestión de salas
+service SalaService {
+  // Crear una nueva sala
+  rpc CrearSala(CrearSalaRequest) returns (SalaResponse);
+
+  // Obtener una sala por ID
+  rpc ObtenerSala(ObtenerSalaRequest) returns (SalaResponse);
+
+  // Listar todas las salas
+  rpc ListarSalas(ListarSalasRequest) returns (ListarSalasResponse);
+
+  // Activar una sala
+  rpc ActivarSala(ActivarSalaRequest) returns (SalaResponse);
+
+  // Desactivar una sala
+  rpc DesactivarSala(DesactivarSalaRequest) returns (SalaResponse);
+}
+
+// Mensajes de request
+message CrearSalaRequest {
+  string nombre = 1;
+  uint32 capacidad = 2;
+}
+
+message ObtenerSalaRequest {
+  string id = 1;
+}
+
+message ListarSalasRequest {}
+
+message ActivarSalaRequest {
+  string id = 1;
+}
+
+message DesactivarSalaRequest {
+  string id = 1;
+}
+
+// Mensajes de response
+message SalaResponse {
+  string id = 1;
+  string nombre = 2;
+  uint32 capacidad = 3;
+  bool activa = 4;
+}
+
+message ListarSalasResponse {
+  repeated SalaResponse salas = 1;
+}
