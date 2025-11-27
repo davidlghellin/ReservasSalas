@@ -1,0 +1,301 @@
+import { VerticalBox, HorizontalBox, ListView, LineEdit, Button, ScrollView } from "std-widgets.slint";
+
+export struct Sala {
+    id: string,
+    nombre: string,
+    capacidad: int,
+    activa: bool,
+}
+
+export component AppWindow inherits Window {
+    title: "🏢 Gestión de Salas - Slint";
+    preferred-width: 1000px;
+    preferred-height: 700px;
+    background: @linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    // Callbacks para comunicarse con Rust
+    callback crear-sala(string, int);
+    callback activar-sala(string);
+    callback desactivar-sala(string);
+    callback cargar-salas();
+
+    // Propiedades compartidas
+    in-out property <[Sala]> salas: [];
+    in-out property <string> mensaje: "";
+    in-out property <bool> loading: false;
+
+    // Estado del formulario
+    in-out property <string> nuevo-nombre: "";
+    in-out property <int> nueva-capacidad: 10;
+
+    VerticalBox {
+        padding: 20px;
+        spacing: 20px;
+
+        // Header
+        VerticalBox {
+            spacing: 5px;
+
+            Text {
+                text: "🏢 Gestión de Salas";
+                font-size: 32px;
+                font-weight: 800;
+                color: white;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: "Sistema de reservas - Slint UI";
+                font-size: 16px;
+                color: #f0f0f0;
+                horizontal-alignment: center;
+            }
+        }
+
+        // Banner informativo
+        Rectangle {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            height: 40px;
+
+            Text {
+                text: "📋 Backend: http://localhost:3000/api";
+                color: white;
+                font-weight: 600;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        // Mensaje de feedback
+        if mensaje != "" : Rectangle {
+            background: white;
+            border-radius: 12px;
+            height: 50px;
+
+            Text {
+                text: mensaje;
+                color: #333;
+                font-weight: 600;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        // Formulario crear sala
+        Rectangle {
+            background: white;
+            border-radius: 12px;
+
+            VerticalBox {
+                padding: 20px;
+                spacing: 15px;
+
+                Text {
+                    text: "➕ Nueva Sala";
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #667eea;
+                }
+
+                HorizontalBox {
+                    spacing: 10px;
+
+                    VerticalBox {
+                        spacing: 5px;
+                        horizontal-stretch: 1;
+
+                        Text {
+                            text: "Nombre:";
+                            font-weight: 600;
+                            color: #555;
+                        }
+
+                        LineEdit {
+                            text <=> nuevo-nombre;
+                            placeholder-text: "Ej: Sala de conferencias";
+                            enabled: !loading;
+                            height: 35px;
+                        }
+                    }
+
+                    VerticalBox {
+                        spacing: 5px;
+                        min-width: 150px;
+
+                        Text {
+                            text: "Capacidad:";
+                            font-weight: 600;
+                            color: #555;
+                        }
+
+                        LineEdit {
+                            text: nueva-capacidad;
+                            input-type: number;
+                            enabled: !loading;
+                            height: 35px;
+
+                            edited(text) => {
+                                if (text != "") {
+                                    nueva-capacidad = text.to-float();
+                                }
+                            }
+                        }
+                    }
+
+                    VerticalBox {
+                        spacing: 5px;
+
+                        Rectangle { height: 22px; }
+
+                        Button {
+                            text: loading ? "⏳ Creando..." : "➕ Crear Sala";
+                            enabled: !loading;
+                            primary: true;
+                            height: 35px;
+
+                            clicked => {
+                                if (nuevo-nombre != "" && nueva-capacidad > 0) {
+                                    crear-sala(nuevo-nombre, nueva-capacidad);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Lista de salas
+        Rectangle {
+            background: white;
+            border-radius: 12px;
+            vertical-stretch: 1;
+
+            VerticalBox {
+                padding: 20px;
+                spacing: 15px;
+
+                HorizontalBox {
+                    spacing: 10px;
+
+                    Text {
+                        text: "📋 Lista de Salas (" + salas.length + ")";
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: #667eea;
+                        horizontal-stretch: 1;
+                    }
+
+                    Button {
+                        text: "🔄 Actualizar";
+                        enabled: !loading;
+                        width: 120px;
+
+                        clicked => {
+                            cargar-salas();
+                        }
+                    }
+                }
+
+                ScrollView {
+                    vertical-stretch: 1;
+
+                    VerticalBox {
+                        spacing: 15px;
+
+                        if salas.length == 0 : Text {
+                            text: "No hay salas registradas. Crea una nueva sala para comenzar.";
+                            color: #999;
+                            horizontal-alignment: center;
+                        }
+
+                        for sala in salas : Rectangle {
+                            background: sala.activa ? #f8fff9 : white;
+                            border-color: sala.activa ? #28a745 : #e0e0e0;
+                            border-width: 2px;
+                            border-radius: 12px;
+                            height: 120px;
+
+                            HorizontalBox {
+                                padding: 15px;
+                                spacing: 15px;
+
+                                // Contenido de la sala
+                                VerticalBox {
+                                    spacing: 8px;
+                                    horizontal-stretch: 1;
+
+                                    // Header
+                                    HorizontalBox {
+                                        spacing: 10px;
+
+                                        Text {
+                                            text: sala.nombre;
+                                            font-size: 18px;
+                                            font-weight: 700;
+                                            color: #333;
+                                            horizontal-stretch: 1;
+                                        }
+
+                                        Rectangle {
+                                            background: sala.activa ? #d4edda : #f8d7da;
+                                            border-radius: 20px;
+                                            width: 90px;
+                                            height: 25px;
+
+                                            Text {
+                                                text: sala.activa ? "✅ Activa" : "⏸️ Inactiva";
+                                                color: sala.activa ? #155724 : #721c24;
+                                                font-size: 12px;
+                                                font-weight: 600;
+                                                horizontal-alignment: center;
+                                                vertical-alignment: center;
+                                            }
+                                        }
+                                    }
+
+                                    // Detalles
+                                    Text {
+                                        text: "👥 Capacidad: " + sala.capacidad + " personas";
+                                        color: #555;
+                                    }
+
+                                    Text {
+                                        text: "ID: " + sala.id;
+                                        font-size: 12px;
+                                        color: #999;
+                                    }
+                                }
+
+                                // Acciones
+                                VerticalBox {
+                                    alignment: center;
+                                    width: 120px;
+
+                                    if sala.activa : Button {
+                                        text: "⏸️ Desactivar";
+                                        enabled: !loading;
+
+                                        clicked => {
+                                            desactivar-sala(sala.id);
+                                        }
+                                    }
+
+                                    if !sala.activa : Button {
+                                        text: "▶️ Activar";
+                                        enabled: !loading;
+                                        primary: true;
+
+                                        clicked => {
+                                            activar-sala(sala.id);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
