@@ -12,6 +12,7 @@ members = [
     "crates/app-desktop/src-tauri",
     "crates/app-desktop-dioxus",
     "crates/app-desktop-slint",
+    "crates/app-desktop-iced",
 ]
 resolver = "2"
 
