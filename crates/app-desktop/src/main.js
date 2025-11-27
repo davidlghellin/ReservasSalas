@@ -83,7 +83,39 @@ function inicializar() {
     console.log('📥 Cargando salas iniciales...');
     cargarSalas();
 
+    // Obtener y mostrar ruta del log
+    obtenerRutaLog();
+
     mostrarNotificacion('🟢 Aplicación lista', 'success');
+}
+
+// Función para obtener y mostrar la ruta del log
+async function obtenerRutaLog() {
+    try {
+        const logPath = await invoke('get_log_path');
+        console.log(`📋 Logs guardados en: ${logPath}`);
+
+        // Crear banner informativo en la UI
+        const banner = document.createElement('div');
+        banner.innerHTML = `📋 Logs: <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">${logPath}</code>`;
+        banner.style.cssText = `
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #666;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-family: monospace;
+        `;
+        document.body.appendChild(banner);
+    } catch (error) {
+        console.error('Error obteniendo ruta del log:', error);
+    }
 }
 
 // Función para cargar salas
