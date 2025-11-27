@@ -1,46 +1,101 @@
-const { invoke } = window.__TAURI__.core;
+// Esperar a que Tauri esté listo
+let invoke;
+
+// Detectar la versión de Tauri y obtener invoke
+if (window.__TAURI__) {
+    // Tauri v2
+    invoke = window.__TAURI__.core.invoke;
+} else if (window.__TAURI_INTERNALS__) {
+    // Tauri v2 alternativo
+    invoke = window.__TAURI_INTERNALS__.invoke;
+} else {
+    console.error('❌ Tauri API no disponible');
+    // Función de fallback para debugging
+    invoke = async (cmd, args) => {
+        console.error(`No se puede invocar ${cmd} - Tauri no inicializado`);
+        throw new Error('Tauri API no disponible');
+    };
+}
+
+console.log('🚀 JavaScript cargado, invoke:', typeof invoke);
 
 // Elementos del DOM
-const crearSalaForm = document.getElementById('crear-sala-form');
-const salasContainer = document.getElementById('salas-container');
-const refreshBtn = document.getElementById('refresh-btn');
+let crearSalaForm;
+let salasContainer;
+let refreshBtn;
 
-// Cargar salas al iniciar
-document.addEventListener('DOMContentLoaded', () => {
-    cargarSalas();
-});
+// Esperar a que el DOM esté listo
+function inicializar() {
+    console.log('📄 DOM cargado, inicializando...');
 
-// Evento para crear sala
-crearSalaForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    crearSalaForm = document.getElementById('crear-sala-form');
+    salasContainer = document.getElementById('salas-container');
+    refreshBtn = document.getElementById('refresh-btn');
 
-    const formData = new FormData(crearSalaForm);
-    const request = {
-        nombre: formData.get('nombre'),
-        capacidad: parseInt(formData.get('capacidad'))
-    };
-
-    try {
-        await invoke('crear_sala', { request });
-        crearSalaForm.reset();
-        await cargarSalas();
-        mostrarNotificacion('✅ Sala creada exitosamente', 'success');
-    } catch (error) {
-        mostrarNotificacion(`❌ Error: ${error}`, 'error');
+    if (!crearSalaForm) {
+        console.error('⚠️ No se encontró el formulario #crear-sala-form');
+        return;
     }
-});
 
-// Evento para refrescar
-refreshBtn.addEventListener('click', cargarSalas);
+    if (!salasContainer) {
+        console.error('⚠️ No se encontró el contenedor #salas-container');
+        return;
+    }
+
+    if (!refreshBtn) {
+        console.error('⚠️ No se encontró el botón #refresh-btn');
+        return;
+    }
+
+    console.log('✅ Elementos DOM encontrados');
+
+    // Agregar eventos
+    crearSalaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log('📝 Formulario enviado');
+
+        const formData = new FormData(crearSalaForm);
+        const request = {
+            nombre: formData.get('nombre'),
+            capacidad: parseInt(formData.get('capacidad'))
+        };
+
+        console.log('📤 Enviando solicitud:', request);
+
+        try {
+            const resultado = await invoke('crear_sala', { request });
+            console.log('✅ Sala creada:', resultado);
+            crearSalaForm.reset();
+            await cargarSalas();
+            mostrarNotificacion('✅ Sala creada exitosamente', 'success');
+        } catch (error) {
+            console.error('❌ Error al crear sala:', error);
+            mostrarNotificacion(`❌ Error: ${error}`, 'error');
+        }
+    });
+
+    refreshBtn.addEventListener('click', () => {
+        console.log('🔄 Refrescando salas...');
+        cargarSalas();
+    });
+
+    // Cargar salas iniciales
+    console.log('📥 Cargando salas iniciales...');
+    cargarSalas();
+
+    mostrarNotificacion('🟢 Aplicación lista', 'success');
+}
 
 // Función para cargar salas
 async function cargarSalas() {
+    console.log('📡 Solicitando lista de salas...');
     salasContainer.innerHTML = '<div class="loading">⏳ Cargando salas...</div>';
 
     try {
         const salas = await invoke('listar_salas');
+        console.log('✅ Salas recibidas:', salas);
 
-        if (salas.length === 0) {
+        if (!salas || salas.length === 0) {
             salasContainer.innerHTML = '<div class="empty">📭 No hay salas registradas</div>';
             return;
         }
@@ -51,7 +106,10 @@ async function cargarSalas() {
         document.querySelectorAll('[data-action]').forEach(btn => {
             btn.addEventListener('click', manejarAccionSala);
         });
+
+        console.log(`✅ ${salas.length} salas renderizadas`);
     } catch (error) {
+        console.error('❌ Error al cargar salas:', error);
         salasContainer.innerHTML = `<div class="empty">❌ Error al cargar salas: ${error}</div>`;
     }
 }
@@ -64,7 +122,7 @@ function crearTarjetaSala(sala) {
     return `
         <div class="sala-card ${estadoClass}">
             <div class="sala-header">
-                <h3 class="sala-nombre">${sala.nombre}</h3>
+                <h3 class="sala-nombre">${escapeHtml(sala.nombre)}</h3>
                 <span class="sala-estado ${estadoClass}">${estadoTexto}</span>
             </div>
             <div class="sala-info">
@@ -102,6 +160,8 @@ async function manejarAccionSala(e) {
     const action = e.target.dataset.action;
     const id = e.target.dataset.id;
 
+    console.log(`🎬 Acción: ${action} en sala ${id}`);
+
     try {
         if (action === 'activar') {
             await invoke('activar_sala', { id });
@@ -113,13 +173,13 @@ async function manejarAccionSala(e) {
 
         await cargarSalas();
     } catch (error) {
+        console.error('❌ Error en acción:', error);
         mostrarNotificacion(`❌ Error: ${error}`, 'error');
     }
 }
 
 // Función para mostrar notificaciones
 function mostrarNotificacion(mensaje, tipo) {
-    // Crear elemento de notificación
     const notif = document.createElement('div');
     notif.textContent = mensaje;
     notif.style.cssText = `
@@ -138,11 +198,17 @@ function mostrarNotificacion(mensaje, tipo) {
 
     document.body.appendChild(notif);
 
-    // Remover después de 3 segundos
     setTimeout(() => {
         notif.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => notif.remove(), 300);
     }, 3000);
+}
+
+// Función helper para escapar HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Agregar animaciones CSS
@@ -171,3 +237,11 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Inicializar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializar);
+} else {
+    // El DOM ya está listo
+    inicializar();
+}
