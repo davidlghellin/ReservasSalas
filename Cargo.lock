@@ -235,10 +235,10 @@ name = "app-desktop-iced"
 version = "0.1.0"
 dependencies = [
  "iced",
- "reqwest",
- "serde",
- "serde_json",
+ "once_cell",
+ "salas-grpc",
  "tokio",
+ "tonic",
 ]
 
 [[package]]
