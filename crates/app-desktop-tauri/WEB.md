@@ -44,15 +44,15 @@ crates/app-desktop-web/
 #### 1. Crear directorio web
 
 ```bash
-mkdir -p crates/app-desktop-web
+mkdir -p crates/app-desktop-tauri-web
 ```
 
 #### 2. Copiar archivos del frontend
 
 ```bash
-cp crates/app-desktop/src/index.html crates/app-desktop-web/
-cp crates/app-desktop/src/styles.css crates/app-desktop-web/
-cp crates/app-desktop/src/main.js crates/app-desktop-web/
+cp crates/app-desktop-tauri/src/index.html crates/app-desktop-tauri-web/
+cp crates/app-desktop-tauri/src/styles.css crates/app-desktop-tauri-web/
+cp crates/app-desktop-tauri/src/main.js crates/app-desktop-tauri-web/
 ```
 
 #### 3. Modificar `main.js` para usar fetch
@@ -74,7 +74,7 @@ const salas = await response.json();
 
 **Opción A: Python**
 ```bash
-cd crates/app-desktop-web
+cd crates/app-desktop-tauri-web
 python3 -m http.server 8080
 
 # Abrir: http://localhost:8080
@@ -83,7 +83,7 @@ python3 -m http.server 8080
 **Opción B: Node.js (http-server)**
 ```bash
 npm install -g http-server
-cd crates/app-desktop-web
+cd crates/app-desktop-tauri-web
 http-server -p 8080
 
 # Abrir: http://localhost:8080
@@ -92,7 +92,7 @@ http-server -p 8080
 **Opción C: Rust (simple-http-server)**
 ```bash
 cargo install simple-http-server
-cd crates/app-desktop-web
+cd crates/app-desktop-tauri-web
 simple-http-server -p 8080
 
 # Abrir: http://localhost:8080
@@ -110,16 +110,16 @@ Si quieres una SPA moderna con build optimizado:
 
 ```bash
 cd crates
-npm create vite@latest app-desktop-spa -- --template vanilla
+npm create vite@latest app-desktop-tauri-spa -- --template vanilla
 
-cd app-desktop-spa
+cd app-desktop-tauri-spa
 npm install
 ```
 
 #### 2. Copiar assets
 
 ```bash
-cp ../app-desktop/src/styles.css src/
+cp ../app-desktop-tauri/src/styles.css src/
 ```
 
 #### 3. Crear `src/main.js`:
@@ -164,7 +164,7 @@ async function desactivarSala(id) {
 }
 
 // El resto del código...
-// (copiar lógica de app-desktop/src/main.js)
+// (copiar lógica de app-desktop-tauri/src/main.js)
 ```
 
 #### 4. Compilar para producción
@@ -199,7 +199,7 @@ use tower_http::services::ServeDir;
 let app = Router::new()
     .merge(web_router)
     .nest("/api", api_router)
-    .nest_service("/desktop-spa", ServeDir::new("crates/app-desktop-spa/dist"))
+    .nest_service("/desktop-spa", ServeDir::new("crates/app-desktop-tauri-spa/dist"))
     .layer(cors);
 ```
 

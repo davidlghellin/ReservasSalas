@@ -21,11 +21,11 @@ Guía completa para compilar y distribuir la aplicación en diferentes plataform
 ### macOS (nativo)
 
 ```bash
-cd crates/app-desktop/src-tauri
+cd crates/app-desktop-tauri/src-tauri
 cargo build --release
 
 # Ejecutar:
-../../../target/release/app-desktop
+../../../target/release/app-desktop-tauri
 ```
 
 ### Linux, Windows y Android
@@ -73,7 +73,7 @@ cargo run --bin server
 
 **O crear SPA (ver WEB.md):**
 ```bash
-cd crates/app-desktop-web
+cd crates/app-desktop-tauri-web
 python3 -m http.server 8080
 # http://localhost:8080
 ```
@@ -85,7 +85,7 @@ python3 -m http.server 8080
 ### macOS (.dmg)
 
 ```bash
-cd crates/app-desktop/src-tauri
+cd crates/app-desktop-tauri/src-tauri
 
 # Instalar tauri-cli si no lo tienes
 cargo install tauri-cli
@@ -99,12 +99,12 @@ cargo tauri build
 ### Linux (.deb, .AppImage)
 
 ```bash
-cd crates/app-desktop/src-tauri
+cd crates/app-desktop-tauri/src-tauri
 cargo tauri build
 
 # Archivos en:
-# - target/release/bundle/deb/app-desktop.deb
-# - target/release/bundle/appimage/app-desktop.AppImage
+# - target/release/bundle/deb/app-desktop-tauri.deb
+# - target/release/bundle/appimage/app-desktop-tauri.AppImage
 ```
 
 ### Windows (.msi)
@@ -130,7 +130,7 @@ export BACKEND_BASE_URL=https://api.example.com
 export LOG_FILE=/var/log/reservas-salas.log
 
 # Ejecutar
-./target/release/app-desktop
+./target/release/app-desktop-tauri
 ```
 
 ### En Windows
@@ -304,7 +304,7 @@ Los instaladores se generan automáticamente en GitHub Actions:
 
 ```bash
 # Crear App Bundle (AAB)
-cd crates/app-desktop/src-tauri/gen/android
+cd crates/app-desktop-tauri/src-tauri/gen/android
 ./gradlew bundleRelease
 
 # Subir a: https://play.google.com/console
@@ -342,7 +342,7 @@ LOG_FILE=/var/log/app.log \
 ### Opción 2: Netlify/Vercel (SPA)
 
 ```bash
-cd crates/app-desktop-spa
+cd crates/app-desktop-tauri-spa
 npm run build
 
 # Subir carpeta dist/
@@ -366,10 +366,10 @@ docker run -p 3000:3000 reservas-salas
 
 # Firmar
 codesign --force --deep --sign "Developer ID Application: TU NOMBRE" \
-  target/release/bundle/macos/app-desktop.app
+  target/release/bundle/macos/app-desktop-tauri.app
 
 # Notarizar
-xcrun notarytool submit target/release/bundle/dmg/app-desktop.dmg \
+xcrun notarytool submit target/release/bundle/dmg/app-desktop-tauri.dmg \
   --apple-id tu@email.com \
   --team-id TEAM_ID \
   --password APP_SPECIFIC_PASSWORD
