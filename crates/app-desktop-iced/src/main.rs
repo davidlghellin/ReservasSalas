@@ -15,6 +15,9 @@ use once_cell::sync::Lazy;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+#[cfg(not(target_os = "macos"))]
+use notify_rust::Notification;
+
 const GRPC_URL: &str = "http://localhost:50051";
 
 // Alias para simplificar el código de la UI
@@ -81,7 +84,13 @@ impl App {
                 Task::none()
             }
             Message::SalaCreada(Ok(_)) => {
-                self.mensaje = format!("✅ Sala '{}' creada correctamente", self.nuevo_nombre);
+                let nombre = self.nuevo_nombre.clone();
+                self.mensaje = format!("✅ Sala '{}' creada correctamente", nombre);
+                mostrar_notificacion(
+                    "✅ Sala creada",
+                    &format!("La sala '{}' se creó correctamente", nombre),
+                    TipoNotificacion::Exito,
+                );
                 self.nuevo_nombre.clear();
                 self.nueva_capacidad = String::from("10");
                 self.loading = false;
@@ -89,26 +98,39 @@ impl App {
             }
             Message::SalaCreada(Err(e)) => {
                 self.mensaje = format!("❌ Error al crear sala: {}", e);
+                mostrar_notificacion("❌ Error", &e, TipoNotificacion::Error);
                 self.loading = false;
                 Task::none()
             }
             Message::SalaActivada(Ok(_)) => {
                 self.mensaje = "✅ Sala activada correctamente".to_string();
+                mostrar_notificacion(
+                    "✅ Sala activada",
+                    "La sala se activó correctamente",
+                    TipoNotificacion::Exito,
+                );
                 self.loading = false;
                 Task::perform(listar_salas(), Message::SalasCargadas)
             }
             Message::SalaActivada(Err(e)) => {
                 self.mensaje = format!("❌ Error al activar sala: {}", e);
+                mostrar_notificacion("❌ Error", &e, TipoNotificacion::Error);
                 self.loading = false;
                 Task::none()
             }
             Message::SalaDesactivada(Ok(_)) => {
                 self.mensaje = "✅ Sala desactivada correctamente".to_string();
+                mostrar_notificacion(
+                    "✅ Sala desactivada",
+                    "La sala se desactivó correctamente",
+                    TipoNotificacion::Exito,
+                );
                 self.loading = false;
                 Task::perform(listar_salas(), Message::SalasCargadas)
             }
             Message::SalaDesactivada(Err(e)) => {
                 self.mensaje = format!("❌ Error al desactivar sala: {}", e);
+                mostrar_notificacion("❌ Error", &e, TipoNotificacion::Error);
                 self.loading = false;
                 Task::none()
             }
@@ -315,6 +337,69 @@ impl App {
     fn theme(&self) -> Theme {
         Theme::Dracula
     }
+}
+
+// -------- Notificaciones del sistema --------
+
+/// Muestra una notificación del sistema
+fn mostrar_notificacion(titulo: &str, mensaje: &str, tipo: TipoNotificacion) {
+    // En macOS, usar terminal-notifier si está disponible
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+
+        // Sonido según el tipo de notificación
+        let sound = match tipo {
+            TipoNotificacion::Exito => "Glass",      // Sonido de éxito
+            TipoNotificacion::Error => "Basso",      // Sonido de error
+            TipoNotificacion::Info => "default",     // Sonido por defecto
+        };
+
+        // Intentar con terminal-notifier primero (más bonito en macOS)
+        let result = Command::new("terminal-notifier")
+            .arg("-title")
+            .arg(titulo)
+            .arg("-message")
+            .arg(mensaje)
+            .arg("-sound")
+            .arg(sound)
+            .spawn();
+
+        if result.is_ok() {
+            return; // terminal-notifier funcionó
+        }
+
+        // Si terminal-notifier no está instalado, usar osascript como fallback
+        let _ = Command::new("osascript")
+            .arg("-e")
+            .arg(format!(
+                "display notification \"{}\" with title \"{}\" sound name \"{}\"",
+                mensaje, titulo, sound
+            ))
+            .spawn();
+    }
+
+    // En Linux/Windows, usar notify-rust
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = Notification::new()
+            .summary(titulo)
+            .body(mensaje)
+            .icon(match tipo {
+                TipoNotificacion::Exito => "dialog-information",
+                TipoNotificacion::Error => "dialog-error",
+                TipoNotificacion::Info => "dialog-information",
+            })
+            .timeout(3000)
+            .show();
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+enum TipoNotificacion {
+    Exito,
+    Error,
+    Info,
 }
 
 // -------- gRPC client compartido con reconexión automática --------

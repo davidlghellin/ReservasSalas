@@ -515,6 +515,80 @@ Task::batch(vec![task1, task2, task3])
 - ✅ Binarios más pequeños (~3.9 MB)
 - ✅ Hot reload en desarrollo
 
+## 🔔 Notificaciones del sistema
+
+Esta implementación incluye **notificaciones nativas del sistema operativo** con soporte multiplataforma:
+
+### macOS - terminal-notifier (recomendado)
+
+En macOS, la app usa `terminal-notifier` si está instalado, con sonidos personalizados según el tipo:
+
+```bash
+# Instalar terminal-notifier (opcional pero recomendado)
+brew install terminal-notifier
+```
+
+```rust
+// macOS: terminal-notifier con sonidos personalizados
+Command::new("terminal-notifier")
+    .arg("-title").arg(titulo)
+    .arg("-message").arg(mensaje)
+    .arg("-sound").arg(match tipo {
+        TipoNotificacion::Exito => "Glass",   // Sonido de éxito
+        TipoNotificacion::Error => "Basso",   // Sonido de error
+        TipoNotificacion::Info => "default",  // Sonido por defecto
+    })
+    .spawn();
+
+// Fallback a osascript si terminal-notifier no está instalado
+Command::new("osascript")
+    .arg("-e")
+    .arg(format!("display notification \"{}\" with title \"{}\"", mensaje, titulo))
+    .spawn();
+```
+
+### Linux/Windows - notify-rust
+
+En Linux y Windows, usa `notify-rust` para notificaciones nativas:
+
+```rust
+Notification::new()
+    .summary(titulo)
+    .body(mensaje)
+    .icon("dialog-information")
+    .timeout(3000)
+    .show();
+```
+
+**Uso en la aplicación:**
+- ✅ **Sala creada** - Notificación de éxito al crear una sala
+- ✅ **Sala activada/desactivada** - Confirmación de cambio de estado
+- ❌ **Errores** - Notificación de error con mensaje descriptivo
+
+**Ventajas de notificaciones nativas:**
+- ✅ **Nativas del SO** - Usan el sistema de notificaciones de macOS/Linux/Windows
+- ✅ **No intrusivas** - Aparecen en la esquina de la pantalla
+- ✅ **Automáticas** - Se ocultan después de 3 segundos
+- ✅ **Accesibles** - Compatibles con lectores de pantalla
+- ✅ **Sin código UI** - No necesitas implementar toasts personalizados
+
+**Sonidos en macOS:**
+- `Glass` - Éxito (suena limpio y agradable)
+- `Basso` - Error (sonido grave de advertencia)
+- `default` - Información (sonido estándar del sistema)
+
+**Comparación con toasts custom (JS):**
+
+| Característica | Notificaciones nativas | Toasts custom (JS) |
+|----------------|------------------------|-------------------|
+| **Implementación** | 1 línea de código | CSS + animaciones + timer |
+| **Integración SO** | ✅ Nativa | ❌ Solo en la app |
+| **Sonidos** | ✅ Built-in (macOS) | ⚠️ Manual |
+| **Personalización** | ⚠️ Limitada | ✅ Total |
+| **Accesibilidad** | ✅ Built-in | ⚠️ Manual |
+| **Multiplataforma** | ✅ Sí | ⚠️ CSS diferente |
+| **Funcionan con app minimizada** | ✅ Sí | ❌ No |
+
 ## 📊 Rendimiento
 
 ### Benchmarks (macOS M1)
