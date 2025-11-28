@@ -88,12 +88,12 @@ fn to_string<E: std::fmt::Display>(err: E) -> String {
 }
 
 fn log_request(method: &str, url: &str) {
-    println!("[app-desktop][req ] {method} {url}");
+    println!("[app-desktop-tauri][req ] {method} {url}");
 }
 
 fn log_status(method: &str, url: &str, status: StatusCode) {
     println!(
-        "[app-desktop][resp] {method} {url} -> {} {}",
+        "[app-desktop-tauri][resp] {method} {url} -> {} {}",
         status.as_u16(),
         status
             .canonical_reason()

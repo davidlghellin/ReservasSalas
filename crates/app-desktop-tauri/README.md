@@ -76,23 +76,23 @@ WebView2 viene preinstalado en Windows 11. Para Windows 10, se descarga automát
 
 ### Modo desarrollo
 ```bash
-cd crates/app-desktop/src-tauri
+cd crates/app-desktop-tauri/src-tauri
 cargo run
 ```
 
 ### Modo release (optimizado)
 ```bash
-cd crates/app-desktop/src-tauri
+cd crates/app-desktop-tauri/src-tauri
 cargo build --release
 
 # El binario estará en:
-../../../target/release/app-desktop
+../../../target/release/app-desktop-tauri
 ```
 
 ### Ejecutar directamente
 ```bash
 # Desde la raíz del proyecto
-./target/release/app-desktop
+./target/release/app-desktop-tauri
 ```
 
 ## Estructura del proyecto
@@ -229,7 +229,7 @@ Edita los archivos en `src/`:
 ## Crear instalador
 
 ```bash
-cd crates/app-desktop/src-tauri
+cd crates/app-desktop-tauri/src-tauri
 
 # Genera instaladores para tu plataforma
 cargo tauri build

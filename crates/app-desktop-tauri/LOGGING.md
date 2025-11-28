@@ -15,10 +15,10 @@ Puedes cambiar la ubicación usando la variable de entorno `LOG_FILE`:
 ```bash
 # En Linux/macOS
 export LOG_FILE=/ruta/personalizada/mi-app.log
-./target/release/app-desktop
+./target/release/app-desktop-tauri
 
 # En una sola línea
-LOG_FILE=/ruta/personalizada/mi-app.log ./target/release/app-desktop
+LOG_FILE=/ruta/personalizada/mi-app.log ./target/release/app-desktop-tauri
 ```
 
 ```powershell
@@ -87,21 +87,21 @@ cargo run --release
 ### Producción con logs personalizados
 ```bash
 # Logs en el directorio del usuario
-LOG_FILE=~/logs/reservas-salas-$(date +%Y%m%d).log ./target/release/app-desktop
+LOG_FILE=~/logs/reservas-salas-$(date +%Y%m%d).log ./target/release/app-desktop-tauri
 ```
 
 ### Logs por día
 ```bash
 # Crear un log diferente cada día
-LOG_FILE="/var/log/reservas-salas-$(date +%Y-%m-%d).log" ./target/release/app-desktop
+LOG_FILE="/var/log/reservas-salas-$(date +%Y-%m-%d).log" ./target/release/app-desktop-tauri
 ```
 
 ### Con servidor backend personalizado
 ```bash
 # Configurar ambos: backend y logs
 BACKEND_BASE_URL=http://api.example.com \
-LOG_FILE=/var/log/app-desktop.log \
-./target/release/app-desktop
+LOG_FILE=/var/log/app-desktop-tauri.log \
+./target/release/app-desktop-tauri
 ```
 
 ## 🧹 Limpiar logs antiguos
@@ -147,7 +147,7 @@ export LOG_FILE=~/logs/reservas-salas/app-$(date +%Y%m%d-%H%M%S).log
 export BACKEND_BASE_URL=http://localhost:3000/api
 
 # Ejecutar la app
-/Users/davidlopez/Proyectos/ReservasSalas/target/release/app-desktop
+/Users/davidlopez/Proyectos/ReservasSalas/target/release/app-desktop-tauri
 
 # El banner en la UI mostrará la ruta del log
 ```

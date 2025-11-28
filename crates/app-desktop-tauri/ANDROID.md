@@ -66,7 +66,7 @@ cargo install tauri-cli --version "^2.0.0"
 ## 📱 Inicializar proyecto Android
 
 ```bash
-cd /Users/davidlopez/Proyectos/ReservasSalas/crates/app-desktop/src-tauri
+cd /Users/davidlopez/Proyectos/ReservasSalas/crates/app-desktop-tauri/src-tauri
 
 # Inicializar Android (solo la primera vez)
 cargo tauri android init
