@@ -10,4 +10,4 @@ usuarios-auth = { path = "../auth" }
 async-trait = "0.1"
 
 [dev-dependencies]
-tokio = { version = "1.41", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }

@@ -10,7 +10,7 @@ path = "src/main.rs"
 [dependencies]
 iced = { version = "0.13", features = ["tokio"] }
 tonic = "0.12"
-tokio = { version = "1", features = ["full"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 
 # Usar el crate gRPC local
 salas-grpc = { path = "../features/salas/grpc" }
