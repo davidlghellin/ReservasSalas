@@ -9,7 +9,6 @@ salas-domain = { path = "../domain" }
 usuarios-auth = { path = "../../usuarios/auth" }
 usuarios-domain = { path = "../../usuarios/domain" }
 
-tokio = { workspace = true }
 tonic = { workspace = true }
 prost = { workspace = true }
 async-trait = { workspace = true }

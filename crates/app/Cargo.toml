@@ -9,30 +9,25 @@ path = "src/main.rs"
 
 [dependencies]
 # Workspace dependencies
-tokio = { workspace = true }
 axum = { workspace = true }
-tower = { workspace = true }
-tower-http = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 tonic = { workspace = true }
 tonic-reflection = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 # Internal crates - Salas
-salas-domain = { path = "../features/salas/domain" }
-salas-application = { path = "../features/salas/application" }
-salas-infrastructure = { path = "../features/salas/infrastructure" }
 salas-api = { path = "../features/salas/api" }
+salas-application = { path = "../features/salas/application" }
 salas-grpc = { path = "../features/salas/grpc" }
+salas-infrastructure = { path = "../features/salas/infrastructure" }
 
 # Internal crates - Usuarios
-usuarios-domain = { path = "../features/usuarios/domain" }
-usuarios-auth = { path = "../features/usuarios/auth" }
 usuarios-application = { path = "../features/usuarios/application" }
-usuarios-infrastructure = { path = "../features/usuarios/infrastructure" }
+usuarios-domain = { path = "../features/usuarios/domain" }
 usuarios-grpc = { path = "../features/usuarios/grpc" }
+usuarios-infrastructure = { path = "../features/usuarios/infrastructure" }
 
 # Web
 app-web = { path = "../app-web" }

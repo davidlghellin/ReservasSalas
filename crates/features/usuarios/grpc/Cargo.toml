@@ -8,7 +8,6 @@ usuarios-domain = { path = "../domain" }
 usuarios-auth = { path = "../auth" }
 usuarios-application = { path = "../application" }
 
-tokio = { workspace = true }
 tonic = { workspace = true }
 prost = { workspace = true }
 async-trait = { workspace = true }

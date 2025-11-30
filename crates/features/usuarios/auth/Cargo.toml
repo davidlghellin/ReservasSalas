@@ -6,14 +6,10 @@ edition = "2021"
 [dependencies]
 usuarios-domain = { path = "../domain" }
 
+chrono = { workspace = true, features = ["serde"] }
 # JWT
-jsonwebtoken = "9.3"
-serde = { version = "1.0", features = ["derive"] }
-chrono = { version = "0.4", features = ["serde"] }
+jsonwebtoken = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 
 # Password hashing
-argon2 = "0.5"
-rand = "0.8"
-
-# Error handling
-thiserror = "1.0"
+argon2 = { workspace = true }
