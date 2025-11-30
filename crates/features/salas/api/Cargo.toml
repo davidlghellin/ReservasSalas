@@ -16,14 +16,14 @@ serde_json = { workspace = true }
 axum = { workspace = true , features = ["macros"] }
 
 # Manejo de errores HTTP
-http = "1.0"
+http = { workspace = true }
 
 # Logging (opcional pero recomendado)
 tracing = { workspace = true }
 
 # OpenAPI / Swagger
-utoipa = { version = "5.3", features = ["axum_extras", "chrono"] }
-utoipa-swagger-ui = { version = "9.0", features = ["axum"] }
+utoipa = { workspace = true, features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { workspace = true, features = ["axum"] }
 
 # Autenticación
 usuarios-auth = { path = "../../usuarios/auth" }

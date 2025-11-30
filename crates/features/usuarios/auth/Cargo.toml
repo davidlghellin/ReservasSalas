@@ -7,9 +7,9 @@ edition = "2021"
 usuarios-domain = { path = "../domain" }
 
 # JWT
-jsonwebtoken = "9.3"
+jsonwebtoken = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 chrono = { workspace = true, features = ["serde"] }
 
 # Password hashing
-argon2 = "0.5"
+argon2 = { workspace = true }

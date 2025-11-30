@@ -8,7 +8,7 @@ salas-domain = { path = "../domain" }
 salas-application = { path = "../application" }
 tokio = { workspace = true }
 async-trait = { workspace = true }
-serde = "1.0"
+serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]

@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
-validator = { version = "0.16", features = ["derive"] }
-utoipa = { version = "5", features = ["uuid"] }
+validator = { workspace = true, features = ["derive"] }
+utoipa = { workspace = true, features = ["uuid"] }
