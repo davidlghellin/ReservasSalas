@@ -238,6 +238,7 @@ dependencies = [
  "notify-rust",
  "once_cell",
  "salas-grpc",
+ "salas-validation",
  "tokio",
  "tonic",
 ]
@@ -7889,6 +7890,15 @@ dependencies = [
  "serde_json",
  "tempfile",
  "tokio",
+]
+
+[[package]]
+name = "salas-validation"
+version = "0.1.0"
+dependencies = [
+ "salas-grpc",
+ "thiserror 1.0.69",
+ "uuid",
 ]
 
 [[package]]

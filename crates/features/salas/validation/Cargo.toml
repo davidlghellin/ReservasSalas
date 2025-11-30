@@ -1,0 +1,14 @@
+[package]
+name = "salas-validation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Dependencia del crate gRPC para acceder a los tipos proto
+salas-grpc = { path = "../grpc" }
+
+# Para errores personalizados
+thiserror = "1.0"
+
+# Para validación de UUIDs
+uuid = { version = "1", features = ["std"] }
