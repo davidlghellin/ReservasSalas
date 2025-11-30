@@ -212,6 +212,8 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-opener",
  "tokio",
+ "tonic",
+ "usuarios-grpc",
 ]
 
 [[package]]
@@ -221,6 +223,7 @@ dependencies = [
  "chrono",
  "dioxus",
  "dioxus-logger 0.5.1",
+ "prost 0.12.6",
  "reqwest",
  "salas-application",
  "salas-domain",
@@ -228,6 +231,8 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tonic",
+ "usuarios-grpc",
 ]
 
 [[package]]
@@ -7046,12 +7051,22 @@ dependencies = [
 
 [[package]]
 name = "prost"
+version = "0.12.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "deb1435c188b76130da55f17a466d252ff7b1418b2ad3e037d127b94e3411f29"
+dependencies = [
+ "bytes",
+ "prost-derive 0.12.6",
+]
+
+[[package]]
+name = "prost"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2796faa41db3ec313a31f7624d9286acf277b52de526150b7e69f3debf891ee5"
 dependencies = [
  "bytes",
- "prost-derive",
+ "prost-derive 0.13.5",
 ]
 
 [[package]]
@@ -7067,11 +7082,24 @@ dependencies = [
  "once_cell",
  "petgraph",
  "prettyplease",
- "prost",
+ "prost 0.13.5",
  "prost-types",
  "regex",
  "syn 2.0.111",
  "tempfile",
+]
+
+[[package]]
+name = "prost-derive"
+version = "0.12.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
+dependencies = [
+ "anyhow",
+ "itertools 0.12.1",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -7093,7 +7121,7 @@ version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52c2c1bf36ddb1a1c396b3601a3cec27c2462e45f07c386894ec3ccf5332bd16"
 dependencies = [
- "prost",
+ "prost 0.13.5",
 ]
 
 [[package]]
@@ -7943,7 +7971,7 @@ name = "salas-grpc"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "prost",
+ "prost 0.13.5",
  "salas-application",
  "salas-domain",
  "tokio",
@@ -9831,7 +9859,7 @@ dependencies = [
  "hyper-util",
  "percent-encoding",
  "pin-project",
- "prost",
+ "prost 0.13.5",
  "socket2 0.5.10",
  "tokio",
  "tokio-stream",
@@ -9861,7 +9889,7 @@ version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "878d81f52e7fcfd80026b7fdb6a9b578b3c3653ba987f87f0dce4b64043cba27"
 dependencies = [
- "prost",
+ "prost 0.13.5",
  "prost-types",
  "tokio",
  "tokio-stream",
@@ -10380,7 +10408,7 @@ name = "usuarios-grpc"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "prost",
+ "prost 0.13.5",
  "tokio",
  "tonic",
  "tonic-build",

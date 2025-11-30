@@ -19,35 +19,160 @@ if (window.__TAURI__) {
 
 console.log('🚀 JavaScript cargado, invoke:', typeof invoke);
 
+// Estado de autenticación
+let usuarioActual = null;
+let tokenActual = null;
+
 // Elementos del DOM
+let loginScreen;
+let mainScreen;
+let loginForm;
+let loginError;
+let loginSubmitBtn;
 let crearSalaForm;
 let salasContainer;
 let refreshBtn;
+let logoutBtn;
+let userNameEl;
+let userEmailEl;
+let userRolEl;
 
 // Esperar a que el DOM esté listo
 function inicializar() {
     console.log('📄 DOM cargado, inicializando...');
 
+    // Elementos de login
+    loginScreen = document.getElementById('login-screen');
+    mainScreen = document.getElementById('main-screen');
+    loginForm = document.getElementById('login-form');
+    loginError = document.getElementById('login-error');
+    loginSubmitBtn = document.getElementById('login-submit-btn');
+
+    // Elementos de la pantalla principal
     crearSalaForm = document.getElementById('crear-sala-form');
     salasContainer = document.getElementById('salas-container');
     refreshBtn = document.getElementById('refresh-btn');
+    logoutBtn = document.getElementById('logout-btn');
+    userNameEl = document.getElementById('user-name');
+    userEmailEl = document.getElementById('user-email');
+    userRolEl = document.getElementById('user-rol');
 
-    if (!crearSalaForm) {
-        console.error('⚠️ No se encontró el formulario #crear-sala-form');
+    // Configurar eventos de login
+    if (loginForm) {
+        loginForm.addEventListener('submit', manejarLogin);
+    }
+
+    // Configurar logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', manejarLogout);
+    }
+
+    // Mostrar pantalla de login inicialmente
+    mostrarPantallaLogin();
+
+    // Inicializar eventos de la pantalla principal (se ejecutará después del login)
+    inicializarPantallaPrincipal();
+}
+
+// Función para manejar el login
+async function manejarLogin(e) {
+    e.preventDefault();
+    console.log('🔐 Intentando login...');
+
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    if (!email || !password) {
+        mostrarErrorLogin('Email y contraseña son requeridos');
         return;
     }
 
-    if (!salasContainer) {
-        console.error('⚠️ No se encontró el contenedor #salas-container');
+    loginSubmitBtn.disabled = true;
+    loginSubmitBtn.textContent = '⏳ Iniciando sesión...';
+    ocultarErrorLogin();
+
+    try {
+        const response = await invoke('login_usuario', {
+            request: { email, password }
+        });
+
+        console.log('✅ Login exitoso:', response);
+        usuarioActual = response.usuario;
+        tokenActual = response.token;
+
+        mostrarPantallaPrincipal();
+        await cargarSalas();
+        mostrarNotificacion('✅ Login exitoso', 'success');
+
+        // Obtener y mostrar ruta del log
+        obtenerRutaLog();
+    } catch (error) {
+        console.error('❌ Error en login:', error);
+        mostrarErrorLogin(`Error: ${error}`);
+    } finally {
+        loginSubmitBtn.disabled = false;
+        loginSubmitBtn.textContent = '🚀 Iniciar Sesión';
+    }
+}
+
+// Función para manejar el logout
+async function manejarLogout() {
+    console.log('🚪 Cerrando sesión...');
+    try {
+        await invoke('logout_usuario');
+        usuarioActual = null;
+        tokenActual = null;
+        mostrarPantallaLogin();
+        mostrarNotificacion('👋 Sesión cerrada', 'info');
+    } catch (error) {
+        console.error('Error en logout:', error);
+        // Aún así limpiar el estado local
+        usuarioActual = null;
+        tokenActual = null;
+        mostrarPantallaLogin();
+    }
+}
+
+// Función para mostrar pantalla de login
+function mostrarPantallaLogin() {
+    if (loginScreen) loginScreen.style.display = 'flex';
+    if (mainScreen) mainScreen.style.display = 'none';
+    if (loginForm) loginForm.reset();
+    ocultarErrorLogin();
+}
+
+// Función para mostrar pantalla principal
+function mostrarPantallaPrincipal() {
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (mainScreen) mainScreen.style.display = 'block';
+
+    if (usuarioActual) {
+        if (userNameEl) userNameEl.textContent = `👤 ${usuarioActual.nombre}`;
+        if (userEmailEl) userEmailEl.textContent = `📧 ${usuarioActual.email}`;
+        if (userRolEl) userRolEl.textContent = `🎫 ${usuarioActual.rol}`;
+    }
+}
+
+// Función para mostrar error de login
+function mostrarErrorLogin(mensaje) {
+    if (loginError) {
+        loginError.textContent = mensaje;
+        loginError.style.display = 'block';
+    }
+}
+
+// Función para ocultar error de login
+function ocultarErrorLogin() {
+    if (loginError) {
+        loginError.style.display = 'none';
+    }
+}
+
+// Inicializar eventos de la pantalla principal
+function inicializarPantallaPrincipal() {
+    if (!crearSalaForm || !salasContainer || !refreshBtn) {
         return;
     }
-
-    if (!refreshBtn) {
-        console.error('⚠️ No se encontró el botón #refresh-btn');
-        return;
-    }
-
-    console.log('✅ Elementos DOM encontrados');
 
     // Agregar eventos
     crearSalaForm.addEventListener('submit', async (e) => {
@@ -79,14 +204,6 @@ function inicializar() {
         cargarSalas();
     });
 
-    // Cargar salas iniciales
-    console.log('📥 Cargando salas iniciales...');
-    cargarSalas();
-
-    // Obtener y mostrar ruta del log
-    obtenerRutaLog();
-
-    mostrarNotificacion('🟢 Aplicación lista', 'success');
 }
 
 // Función para obtener y mostrar la ruta del log

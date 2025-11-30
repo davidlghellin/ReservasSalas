@@ -106,3 +106,63 @@ pub async fn desactivar_sala(
 pub fn get_log_path(logger: State<'_, Logger>) -> String {
     logger.log_path().display().to_string()
 }
+
+/// Login de usuario usando gRPC
+#[tauri::command]
+pub async fn login_usuario(
+    request: crate::models::LoginRequest,
+    backend: State<'_, BackendApi>,
+    logger: State<'_, Logger>,
+) -> Result<crate::models::LoginResponse, String> {
+    use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest as GrpcLoginRequest};
+    use tonic::Request;
+
+    logger.info(&format!("Iniciando login para: {}", request.email));
+
+    let mut client = UsuarioServiceClient::connect("http://localhost:50051")
+        .await
+        .map_err(|e| {
+            logger.error(&format!("Error de conexión gRPC: {}", e));
+            format!("Error de conexión: {}", e)
+        })?;
+
+    let grpc_request = Request::new(GrpcLoginRequest {
+        email: request.email.clone(),
+        password: request.password,
+    });
+
+    let response = client.login(grpc_request).await
+        .map_err(|e| {
+            logger.error(&format!("Error en login gRPC: {}", e));
+            format!("Error al hacer login: {}", e)
+        })?;
+
+    let login_response = response.into_inner();
+    let usuario_proto = login_response.usuario.ok_or_else(|| {
+        logger.error("Respuesta de login sin usuario");
+        "Respuesta inválida del servidor".to_string()
+    })?;
+
+    let usuario = crate::models::UsuarioInfo {
+        id: usuario_proto.id,
+        nombre: usuario_proto.nombre,
+        email: usuario_proto.email,
+        rol: usuario_proto.rol,
+    };
+
+    logger.info(&format!("Login exitoso para: {}", usuario.email));
+
+    // Guardar el token en el backend
+    backend.set_token(Some(login_response.token.clone()));
+
+    Ok(crate::models::LoginResponse {
+        token: login_response.token,
+        usuario,
+    })
+}
+
+/// Limpia el token de autenticación
+#[tauri::command]
+pub fn logout_usuario(backend: State<'_, BackendApi>) {
+    backend.set_token(None);
+}
