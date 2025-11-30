@@ -8,12 +8,12 @@ name = "app-desktop-iced"
 path = "src/main.rs"
 
 [dependencies]
-iced = { version = "0.13.1", features = ["tokio"] }
+iced = { workspace = true, features = ["tokio"] }
+notify-rust = { workspace = true }
+once_cell = { workspace = true }
 tonic = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 
 # Usar el crate gRPC local
 salas-grpc = { path = "../features/salas/grpc" }
 usuarios-grpc = { path = "../features/usuarios/grpc" }
-once_cell = "1.21.3"
-notify-rust = "4.11.7"

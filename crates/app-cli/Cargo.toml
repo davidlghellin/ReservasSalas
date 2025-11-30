@@ -8,17 +8,17 @@ name = "reservas-cli"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.5.53", features = ["derive"] }
+clap = {  workspace = true, features = ["derive"] }
 
 # gRPC Client
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 tonic = { workspace = true }
 
 # Terminal output
-colored = "3.0.0"
+colored = { workspace = true }
 
 # Error handling
-anyhow = "1.0.100"
+anyhow = { workspace = true }
 
 # Dependencias locales
 salas-grpc = { path = "../features/salas/grpc" }

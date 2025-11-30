@@ -40,6 +40,12 @@ tower-http = { version = "0.6.7", features = ["trace", "cors", "fs"] }
 tracing = "0.1.43"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
+iced = "0.13.1"
+clap = "4.5.53"
+once_cell = "1.21.3"
+notify-rust = "4.11.7"
+colored = "3.0.0"
+anyhow = "1.0.100"
 
 [profile.release]
 opt-level = "z"        # "z" = optimizar para tamaño (más agresivo que "s")
