@@ -8,8 +8,8 @@ name = "app-desktop-dioxus"
 path = "src/main.rs"
 
 [dependencies]
-dioxus = { version = "0.6", features = ["desktop"] }
-dioxus-logger = "0.5"
+dioxus = { workspace = true, features = ["desktop"] }
+dioxus-logger = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 tonic = { workspace = true }
 
