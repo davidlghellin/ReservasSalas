@@ -11,11 +11,11 @@ crate-type = ["staticlib", "cdylib", "lib"]
 tauri-build = { workspace = true, features = [] }
 
 [dependencies]
-tauri = { workspace = true, features = ["devtools"] }
-tauri-plugin-opener = "2.0"
+chrono = { workspace = true }
+reqwest = { workspace = true, default-features = false, features = ["json", "rustls-tls"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-chrono = { workspace = true }
+tauri = { workspace = true, features = ["devtools"] }
+tauri-plugin-opener = { workspace = true }
 tonic = { workspace = true }
 usuarios-grpc = { path = "../../features/usuarios/grpc" }

@@ -4,27 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# Capas de tu feature
-salas-domain = { path = "../domain" }
-salas-application = { path = "../application" }
-
-# Serialización (DTOs)
+axum = { workspace = true , features = ["macros"] }
+http = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-
-# Framework web
-axum = { workspace = true , features = ["macros"] }
-
-# Manejo de errores HTTP
-http = { workspace = true }
-
-# Logging (opcional pero recomendado)
 tracing = { workspace = true }
-
-# OpenAPI / Swagger
 utoipa = { workspace = true, features = ["axum_extras", "chrono"] }
 utoipa-swagger-ui = { workspace = true, features = ["axum"] }
 
 # Autenticación
 usuarios-auth = { path = "../../usuarios/auth" }
 usuarios-domain = { path = "../../usuarios/domain" }
+salas-domain = { path = "../domain" }
+salas-application = { path = "../application" }

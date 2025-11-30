@@ -5,14 +5,9 @@ edition = "2021"
 
 [dependencies]
 # Framework web
+askama = { workspace = true }
 axum = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 tower-http = { workspace = true }
 
-# Templates HTML
-askama = { workspace = true }
-
-# Internal crates
 salas-application = { path = "../features/salas/application" }
-
-# Serialización para formularios
-serde = { workspace = true, features = ["derive"] }

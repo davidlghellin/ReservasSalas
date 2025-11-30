@@ -9,25 +9,25 @@ path = "src/main.rs"
 
 [dependencies]
 # Workspace dependencies
-tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 axum = { workspace = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+tonic = { workspace = true }
+tonic-reflection = { workspace = true }
 tower-http = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-tonic = { workspace = true }
-tonic-reflection = { workspace = true }
 
 # Internal crates - Salas
-salas-application = { path = "../features/salas/application" }
-salas-infrastructure = { path = "../features/salas/infrastructure" }
 salas-api = { path = "../features/salas/api" }
+salas-application = { path = "../features/salas/application" }
 salas-grpc = { path = "../features/salas/grpc" }
+salas-infrastructure = { path = "../features/salas/infrastructure" }
 
 # Internal crates - Usuarios
-usuarios-domain = { path = "../features/usuarios/domain" }
 usuarios-application = { path = "../features/usuarios/application" }
-usuarios-infrastructure = { path = "../features/usuarios/infrastructure" }
+usuarios-domain = { path = "../features/usuarios/domain" }
 usuarios-grpc = { path = "../features/usuarios/grpc" }
+usuarios-infrastructure = { path = "../features/usuarios/infrastructure" }
 
 # Web
 app-web = { path = "../app-web" }

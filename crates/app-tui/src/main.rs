@@ -81,7 +81,7 @@ async fn main() -> std::io::Result<()> {
                 let paragraph = Paragraph::new(items.join("\n"))
                     .block(block)
                     .alignment(Alignment::Left);
-                f.render_widget(paragraph, f.size());
+                f.render_widget(paragraph, f.area());
             }
             AppState::ListarSalas { salas, .. } => {
                 let rows: Vec<Row> = salas
@@ -107,13 +107,13 @@ async fn main() -> std::io::Result<()> {
                             .style(Style::default().fg(Color::Yellow)),
                     )
                     .block(Block::default().title("Salas").borders(Borders::ALL));
-                f.render_widget(table, f.size());
+                f.render_widget(table, f.area());
             }
             AppState::Error { message, .. } => {
                 let paragraph = Paragraph::new(message.clone())
                     .block(Block::default().title("Error").borders(Borders::ALL))
                     .alignment(Alignment::Center);
-                f.render_widget(paragraph, f.size());
+                f.render_widget(paragraph, f.area());
             }
         });
 
@@ -250,7 +250,7 @@ fn render_login_screen(
     active_field: &LoginField,
     error: Option<&str>,
 ) {
-    let size = f.size();
+    let size = f.area();
     let area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -323,7 +323,7 @@ fn render_login_screen(
 }
 
 fn render_welcome_screen(f: &mut Frame, usuario: &UsuarioInfo) {
-    let size = f.size();
+    let size = f.area();
     let area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([

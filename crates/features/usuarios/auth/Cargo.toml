@@ -6,10 +6,10 @@ edition = "2021"
 [dependencies]
 usuarios-domain = { path = "../domain" }
 
+chrono = { workspace = true, features = ["serde"] }
 # JWT
 jsonwebtoken = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-chrono = { workspace = true, features = ["serde"] }
 
 # Password hashing
 argon2 = { workspace = true }
