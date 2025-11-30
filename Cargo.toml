@@ -20,6 +20,7 @@ members = [
     "crates/features/usuarios/infrastructure",
     "crates/features/reservas/domain",
     "crates/features/reservas/application",
+    "crates/features/reservas/infrastructure",
 ]
 resolver = "2"
 
