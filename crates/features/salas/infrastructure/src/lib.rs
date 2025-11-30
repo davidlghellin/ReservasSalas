@@ -1,3 +1,5 @@
-pub mod repository;
+pub mod memory_repository;
+pub mod file_repository;
 
-pub use repository::InMemorySalaRepository;
+pub use memory_repository::InMemorySalaRepository;
+pub use file_repository::FileSalaRepository;
