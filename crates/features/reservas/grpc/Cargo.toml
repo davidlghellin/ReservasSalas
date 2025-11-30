@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 reservas-domain = { path = "../domain" }
 reservas-application = { path = "../application" }
+usuarios-auth = { path = "../../usuarios/auth" }
+usuarios-domain = { path = "../../usuarios/domain" }
 
 tonic = { workspace = true }
 prost = { workspace = true }

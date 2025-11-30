@@ -15,6 +15,11 @@ use usuarios_domain::Rol;
 use usuarios_grpc::UsuarioGrpcServer;
 use usuarios_infrastructure::FileUsuarioRepository;
 
+// Reservas
+use reservas_application::ReservaServiceImpl;
+use reservas_grpc::ReservaGrpcServer;
+use reservas_infrastructure::FileReservaRepository;
+
 #[tokio::main]
 async fn main() {
     // Inicializar el sistema de logging
@@ -88,6 +93,36 @@ async fn main() {
 
     tracing::info!("✓ Servicios de usuarios inicializados");
 
+    // ===== RESERVAS =====
+    tracing::info!("📅 Inicializando sistema de Reservas...");
+
+    // Crear repositorio de reservas
+    let reservas_repository = FileReservaRepository::new(PathBuf::from("./data/reservas.json"));
+
+    // Inicializar (cargar datos existentes)
+    reservas_repository.init().await
+        .expect("Error al inicializar repositorio de reservas");
+
+    tracing::info!("✓ Repositorio de reservas inicializado (./data/reservas.json)");
+
+    // Crear repositorios adicionales para el servicio de reservas
+    let salas_repo_for_reservas = FileSalaRepository::new(PathBuf::from("./data/salas.json"));
+    salas_repo_for_reservas.init().await
+        .expect("Error al inicializar repositorio de salas para reservas");
+
+    let usuarios_repo_for_reservas = FileUsuarioRepository::new(PathBuf::from("./data/usuarios.json"));
+    usuarios_repo_for_reservas.init().await
+        .expect("Error al inicializar repositorio de usuarios para reservas");
+
+    // Crear servicio de reservas con validación de Sala y Usuario
+    let reserva_service_impl = ReservaServiceImpl::new(
+        reservas_repository,
+        salas_repo_for_reservas,
+        usuarios_repo_for_reservas
+    );
+
+    tracing::info!("✓ Servicio de reservas inicializado");
+
     // Configurar CORS para la API REST
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
@@ -119,17 +154,21 @@ async fn main() {
     let grpc_addr = SocketAddr::from(([0, 0, 0, 0], 50051));
     let sala_grpc_server = SalaGrpcServer::new(Arc::clone(&sala_service));
     let usuario_grpc_server = UsuarioGrpcServer::new(Arc::clone(&auth_service), Arc::clone(&usuario_service));
+    use reservas_grpc::proto::reserva_service_server::ReservaServiceServer;
+    let reserva_grpc_server = ReservaServiceServer::new(ReservaGrpcServer::new(reserva_service_impl));
 
-    // Configurar reflexión para grpcurl (incluye ambos servicios)
+    // Configurar reflexión para grpcurl (incluye todos los servicios)
     let reflection_service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(salas_grpc::proto::FILE_DESCRIPTOR_SET)
         .register_encoded_file_descriptor_set(usuarios_grpc::proto::FILE_DESCRIPTOR_SET)
+        .register_encoded_file_descriptor_set(reservas_grpc::proto::FILE_DESCRIPTOR_SET)
         .build_v1()
         .unwrap();
 
     tracing::info!("✓ Servidor gRPC escuchando en http://{}", grpc_addr);
     tracing::info!("  🔌 gRPC Salas: http://localhost:50051");
     tracing::info!("  🔌 gRPC Usuarios: http://localhost:50051");
+    tracing::info!("  🔌 gRPC Reservas: http://localhost:50051");
 
     // Ejecutar ambos servidores en paralelo
     let http_server = async {
@@ -144,6 +183,7 @@ async fn main() {
             .add_service(reflection_service)
             .add_service(sala_grpc_server.into_service())
             .add_service(usuario_grpc_server.into_service())
+            .add_service(reserva_grpc_server)
             .serve(grpc_addr)
             .await
             .unwrap();

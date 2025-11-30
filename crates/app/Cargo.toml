@@ -29,5 +29,10 @@ usuarios-domain = { path = "../features/usuarios/domain" }
 usuarios-grpc = { path = "../features/usuarios/grpc" }
 usuarios-infrastructure = { path = "../features/usuarios/infrastructure" }
 
+# Internal crates - Reservas
+reservas-application = { path = "../features/reservas/application" }
+reservas-grpc = { path = "../features/reservas/grpc" }
+reservas-infrastructure = { path = "../features/reservas/infrastructure" }
+
 # Web
 app-web = { path = "../app-web" }

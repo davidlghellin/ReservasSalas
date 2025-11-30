@@ -1,5 +1,7 @@
+pub mod auth;
 pub mod server;
 
+pub use auth::{AuthUser, RequestAuthExt};
 pub use server::ReservaGrpcServer;
 
 // Re-exportar los tipos generados por tonic

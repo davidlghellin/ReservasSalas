@@ -7597,7 +7597,11 @@ dependencies = [
  "async-trait",
  "chrono",
  "reservas-domain",
+ "salas-application",
+ "salas-domain",
  "tokio",
+ "usuarios-application",
+ "usuarios-domain",
 ]
 
 [[package]]
@@ -7622,6 +7626,8 @@ dependencies = [
  "tokio",
  "tonic",
  "tonic-build",
+ "usuarios-auth",
+ "usuarios-domain",
 ]
 
 [[package]]
@@ -7644,6 +7650,9 @@ version = "0.1.0"
 dependencies = [
  "app-web",
  "axum 0.8.7",
+ "reservas-application",
+ "reservas-grpc",
+ "reservas-infrastructure",
  "salas-api",
  "salas-application",
  "salas-grpc",
@@ -10290,6 +10299,7 @@ dependencies = [
  "argon2",
  "chrono",
  "jsonwebtoken",
+ "rand_core 0.6.4",
  "serde",
  "usuarios-domain",
 ]

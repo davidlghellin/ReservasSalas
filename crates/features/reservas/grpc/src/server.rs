@@ -1,3 +1,4 @@
+use crate::auth::RequestAuthExt;
 use crate::proto::reserva_service_server::ReservaService as ReservaServiceTrait;
 use crate::proto::{
     CancelarReservaRequest, CompletarReservaRequest, CrearReservaRequest,
@@ -59,6 +60,9 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
         &self,
         request: Request<CrearReservaRequest>,
     ) -> Result<Response<ReservaResponse>, Status> {
+        // Validar autenticación
+        request.require_auth_user()?;
+
         let req = request.into_inner();
 
         let fecha_inicio = parse_datetime(&req.fecha_inicio)?;
@@ -79,6 +83,9 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
         &self,
         request: Request<ObtenerReservaRequest>,
     ) -> Result<Response<ReservaResponse>, Status> {
+        // Validar autenticación
+        request.require_auth_user()?;
+
         let req = request.into_inner();
 
         let reserva = self
@@ -95,8 +102,11 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
 
     async fn listar_reservas(
         &self,
-        _request: Request<ListarReservasRequest>,
+        request: Request<ListarReservasRequest>,
     ) -> Result<Response<ListarReservasResponse>, Status> {
+        // Validar autenticación
+        request.require_auth_user()?;
+
         let reservas = self
             .service
             .listar_reservas()
@@ -114,6 +124,9 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
         &self,
         request: Request<ListarReservasPorSalaRequest>,
     ) -> Result<Response<ListarReservasResponse>, Status> {
+        // Validar autenticación
+        request.require_auth_user()?;
+
         let req = request.into_inner();
 
         let reservas = self
@@ -133,6 +146,9 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
         &self,
         request: Request<ListarReservasPorUsuarioRequest>,
     ) -> Result<Response<ListarReservasResponse>, Status> {
+        // Validar autenticación
+        request.require_auth_user()?;
+
         let req = request.into_inner();
 
         let reservas = self
@@ -152,6 +168,9 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
         &self,
         request: Request<CancelarReservaRequest>,
     ) -> Result<Response<ReservaResponse>, Status> {
+        // Validar autenticación
+        request.require_auth_user()?;
+
         let req = request.into_inner();
 
         let reserva = self
@@ -169,6 +188,9 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
         &self,
         request: Request<CompletarReservaRequest>,
     ) -> Result<Response<ReservaResponse>, Status> {
+        // Validar autenticación
+        request.require_auth_user()?;
+
         let req = request.into_inner();
 
         let reserva = self
@@ -186,6 +208,9 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
         &self,
         request: Request<VerificarDisponibilidadRequest>,
     ) -> Result<Response<VerificarDisponibilidadResponse>, Status> {
+        // Validar autenticación
+        request.require_auth_user()?;
+
         let req = request.into_inner();
 
         let fecha_inicio = parse_datetime(&req.fecha_inicio)?;
