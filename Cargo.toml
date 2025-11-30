@@ -35,8 +35,8 @@ tokio = { version = "1.48.0", features = ["rt", "rt-multi-thread"] }
 tonic = "0.12"
 tonic-build = "0.12"
 tonic-reflection = "0.12"
-tower = "0.4"
-tower-http = { version = "0.5", features = ["trace", "cors", "fs"] }
+tower = "0.5.2"
+tower-http = { version = "0.6.7", features = ["trace", "cors", "fs"] }
 tracing = "0.1.43"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
