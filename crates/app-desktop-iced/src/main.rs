@@ -11,6 +11,8 @@ use salas_grpc::proto::{
     ActivarSalaRequest, CrearSalaRequest, DesactivarSalaRequest, ListarSalasRequest, SalaResponse,
 };
 
+use salas_validation::ValidarSala;
+
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -143,19 +145,28 @@ impl App {
                 Task::none()
             }
             Message::CrearSala => {
-                if self.nuevo_nombre.is_empty() {
-                    self.mensaje = "❌ El nombre no puede estar vacío".to_string();
-                    return Task::none();
-                }
-
+                // Parsear capacidad
                 let capacidad = match self.nueva_capacidad.parse::<u32>() {
-                    Ok(c) if c > 0 => c,
-                    _ => {
-                        self.mensaje = "❌ La capacidad debe ser un número mayor que 0".to_string();
+                    Ok(c) => c,
+                    Err(_) => {
+                        self.mensaje = "❌ La capacidad debe ser un número válido".to_string();
                         return Task::none();
                     }
                 };
 
+                // Crear request
+                let request = CrearSalaRequest {
+                    nombre: self.nuevo_nombre.clone(),
+                    capacidad,
+                };
+
+                // ✅ Validar usando el crate compartido
+                if let Err(e) = request.validar() {
+                    self.mensaje = format!("❌ {}", e.mensaje_usuario());
+                    return Task::none();
+                }
+
+                // Si pasa la validación, enviar al backend
                 self.loading = true;
                 self.mensaje.clear();
                 let nombre = self.nuevo_nombre.clone();
