@@ -2,11 +2,13 @@ use crate::models::{CrearSalaRequest, SalaDto};
 use reqwest::{Client, StatusCode};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct BackendApi {
     client: Client,
     base_url: String,
+    token: Arc<Mutex<Option<String>>>,
 }
 
 impl BackendApi {
@@ -17,6 +19,7 @@ impl BackendApi {
         Self {
             client: Client::new(),
             base_url: normalized,
+            token: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -24,10 +27,25 @@ impl BackendApi {
         &self.base_url
     }
 
+    pub fn set_token(&self, token: Option<String>) {
+        *self.token.lock().unwrap() = token;
+    }
+
+    fn build_request(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        if let Ok(token_guard) = self.token.lock() {
+            if let Some(ref token) = *token_guard {
+                return request.header("Authorization", format!("Bearer {}", token));
+            }
+        }
+        request
+    }
+
     pub async fn listar_salas(&self) -> Result<Vec<SalaDto>, String> {
         let url = self.endpoint("/salas");
         log_request("GET", &url);
-        let response = self.client.get(&url).send().await.map_err(to_string)?;
+        let mut req = self.client.get(&url);
+        req = self.build_request(req);
+        let response = req.send().await.map_err(to_string)?;
         log_status("GET", &url, response.status());
         parse_response(response).await
     }
@@ -35,13 +53,9 @@ impl BackendApi {
     pub async fn crear_sala(&self, request: CrearSalaRequest) -> Result<SalaDto, String> {
         let url = self.endpoint("/salas");
         log_request("POST", &url);
-        let response = self
-            .client
-            .post(&url)
-            .json(&request)
-            .send()
-            .await
-            .map_err(to_string)?;
+        let mut req = self.client.post(&url).json(&request);
+        req = self.build_request(req);
+        let response = req.send().await.map_err(to_string)?;
         log_status("POST", &url, response.status());
         parse_response(response).await
     }
@@ -61,7 +75,9 @@ impl BackendApi {
     pub async fn activar_sala(&self, id: &str) -> Result<SalaDto, String> {
         let url = self.endpoint(&format!("/salas/{id}/activar"));
         log_request("PUT", &url);
-        let response = self.client.put(&url).send().await.map_err(to_string)?;
+        let mut req = self.client.put(&url);
+        req = self.build_request(req);
+        let response = req.send().await.map_err(to_string)?;
         log_status("PUT", &url, response.status());
         parse_response(response).await
     }
@@ -69,7 +85,9 @@ impl BackendApi {
     pub async fn desactivar_sala(&self, id: &str) -> Result<SalaDto, String> {
         let url = self.endpoint(&format!("/salas/{id}/desactivar"));
         log_request("PUT", &url);
-        let response = self.client.put(&url).send().await.map_err(to_string)?;
+        let mut req = self.client.put(&url);
+        req = self.build_request(req);
+        let response = req.send().await.map_err(to_string)?;
         log_status("PUT", &url, response.status());
         parse_response(response).await
     }

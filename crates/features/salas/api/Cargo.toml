@@ -16,6 +16,7 @@ serde_json = "1.0"
 # Framework web
 axum = { workspace = true , features = ["macros"] }
 tokio = { version = "1", features = ["full"] }
+async-trait = { workspace = true }
 
 # UUID para IDs
 uuid = { version = "1.0", features = ["v4", "serde"] }
@@ -30,3 +31,7 @@ tracing = "0.1"
 # OpenAPI / Swagger
 utoipa = { version = "5.3", features = ["axum_extras", "chrono"] }
 utoipa-swagger-ui = { version = "9.0", features = ["axum"] }
+
+# Autenticación
+usuarios-auth = { path = "../../usuarios/auth" }
+usuarios-domain = { path = "../../usuarios/domain" }

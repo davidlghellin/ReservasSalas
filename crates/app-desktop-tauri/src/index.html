@@ -7,9 +7,58 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Pantalla de Login -->
+    <div id="login-screen" class="login-container">
+        <div class="login-box">
+            <h1 class="login-title">🔐 Iniciar Sesión</h1>
+            <p class="login-subtitle">Sistema de Gestión de Salas</p>
+            
+            <div id="login-error" class="error-message" style="display: none;"></div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email:</label>
+                    <input
+                        type="email"
+                        id="login-email"
+                        name="email"
+                        required
+                        placeholder="usuario@ejemplo.com"
+                        autocomplete="email"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Contraseña:</label>
+                    <input
+                        type="password"
+                        id="login-password"
+                        name="password"
+                        required
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                    >
+                </div>
+                <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block">
+                    🚀 Iniciar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pantalla Principal (oculta inicialmente) -->
+    <div id="main-screen" class="container" style="display: none;">
         <header>
-            <h1>🏢 Gestión de Salas</h1>
+            <div class="header-with-user">
+                <div>
+                    <h1>🏢 Gestión de Salas</h1>
+                </div>
+                <div class="user-info">
+                    <div class="user-name" id="user-name">👤 Usuario</div>
+                    <div class="user-email" id="user-email">📧 email@ejemplo.com</div>
+                    <div class="user-rol" id="user-rol">🎫 Rol</div>
+                    <button id="logout-btn" class="btn btn-secondary">🚪 Salir</button>
+                </div>
+            </div>
         </header>
 
         <main>

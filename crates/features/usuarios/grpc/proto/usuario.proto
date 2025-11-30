@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package usuario;
+
+// Servicio de autenticación y gestión de usuarios
+service UsuarioService {
+  // Login de usuario
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // Registro de nuevo usuario
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Validar token JWT
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  // Cambiar contraseña
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+
+  // Listar usuarios (solo admin)
+  rpc ListarUsuarios(ListarUsuariosRequest) returns (ListarUsuariosResponse);
+
+  // Obtener usuario por ID
+  rpc ObtenerUsuario(ObtenerUsuarioRequest) returns (UsuarioPublicoResponse);
+
+  // Actualizar nombre
+  rpc ActualizarNombre(ActualizarNombreRequest) returns (UsuarioPublicoResponse);
+
+  // Actualizar rol (solo admin)
+  rpc ActualizarRol(ActualizarRolRequest) returns (UsuarioPublicoResponse);
+
+  // Desactivar usuario (solo admin)
+  rpc DesactivarUsuario(DesactivarUsuarioRequest) returns (DesactivarUsuarioResponse);
+
+  // Activar usuario (solo admin)
+  rpc ActivarUsuario(ActivarUsuarioRequest) returns (ActivarUsuarioResponse);
+}
+
+// ========== Mensajes de Request ==========
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message RegisterRequest {
+  string nombre = 1;
+  string email = 2;
+  string password = 3;
+  optional string rol = 4; // "Admin" o "Usuario"
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ChangePasswordRequest {
+  string user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message ListarUsuariosRequest {}
+
+message ObtenerUsuarioRequest {
+  string id = 1;
+}
+
+message ActualizarNombreRequest {
+  string user_id = 1;
+  string nuevo_nombre = 2;
+}
+
+message ActualizarRolRequest {
+  string admin_id = 1;
+  string user_id = 2;
+  string nuevo_rol = 3; // "Admin" o "Usuario"
+}
+
+message DesactivarUsuarioRequest {
+  string admin_id = 1;
+  string user_id = 2;
+}
+
+message ActivarUsuarioRequest {
+  string admin_id = 1;
+  string user_id = 2;
+}
+
+// ========== Mensajes de Response ==========
+
+message LoginResponse {
+  string token = 1;
+  UsuarioPublico usuario = 2;
+}
+
+message RegisterResponse {
+  string token = 1;
+  UsuarioPublico usuario = 2;
+}
+
+message ValidateTokenResponse {
+  UsuarioPublico usuario = 1;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListarUsuariosResponse {
+  repeated UsuarioPublico usuarios = 1;
+}
+
+message UsuarioPublicoResponse {
+  UsuarioPublico usuario = 1;
+}
+
+message DesactivarUsuarioResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ActivarUsuarioResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ========== Mensajes de Datos ==========
+
+message UsuarioPublico {
+  string id = 1;
+  string nombre = 2;
+  string email = 3;
+  string rol = 4; // "Admin" o "Usuario"
+  string created_at = 5;
+  bool activo = 6;
+}

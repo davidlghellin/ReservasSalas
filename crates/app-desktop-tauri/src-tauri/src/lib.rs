@@ -28,6 +28,8 @@ pub fn run() {
             commands::activar_sala,
             commands::desactivar_sala,
             commands::get_log_path,
+            commands::login_usuario,
+            commands::logout_usuario,
         ])
         .manage(backend_api)
         .manage(logger)

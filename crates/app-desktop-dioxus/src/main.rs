@@ -2,8 +2,11 @@
 
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
+use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest};
+use tonic::Request;
 
 const BACKEND_URL: &str = "http://localhost:3000/api";
+const GRPC_URL: &str = "http://localhost:50051";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 struct SalaDto {
@@ -13,6 +16,20 @@ struct SalaDto {
     activa: bool,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+struct UsuarioInfo {
+    id: String,
+    nombre: String,
+    email: String,
+    rol: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum AppState {
+    Login,
+    Authenticated(UsuarioInfo),
+}
+
 fn main() {
     dioxus_logger::init(dioxus_logger::tracing::Level::INFO).expect("failed to init logger");
     dioxus::launch(App);
@@ -20,6 +37,146 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    let mut app_state = use_signal(|| AppState::Login);
+    let mut token = use_signal(|| Option::<String>::None);
+    let mut usuario_actual = use_signal(|| Option::<UsuarioInfo>::None);
+
+    let current_state = app_state.read().clone();
+    
+    match current_state {
+        AppState::Login => {
+            rsx! {
+                LoginScreen {
+                    app_state: app_state,
+                    token: token,
+                    usuario_actual: usuario_actual,
+                }
+            }
+        }
+        AppState::Authenticated(_) => {
+            let usuario = usuario_actual.read().clone();
+            if let Some(usuario) = usuario {
+                rsx! {
+                    SalasApp {
+                        usuario: usuario.clone(),
+                        token: token,
+                        app_state: app_state,
+                        usuario_actual: usuario_actual,
+                    }
+                }
+            } else {
+                rsx! { div { "Error: Usuario no encontrado" } }
+            }
+        }
+    }
+}
+
+#[component]
+fn LoginScreen(
+    mut app_state: Signal<AppState>,
+    mut token: Signal<Option<String>>,
+    mut usuario_actual: Signal<Option<UsuarioInfo>>,
+) -> Element {
+    let mut email = use_signal(|| String::new());
+    let mut password = use_signal(|| String::new());
+    let mut error = use_signal(|| String::new());
+    let mut loading = use_signal(|| false);
+
+    let login_handler = move |_| {
+        spawn(async move {
+            let email_val = email.read().clone();
+            let password_val = password.read().clone();
+
+            if email_val.is_empty() || password_val.is_empty() {
+                error.set("Email y contraseña son requeridos".to_string());
+                return;
+            }
+
+            loading.set(true);
+            error.set(String::new());
+
+            match login_usuario(&email_val, &password_val).await {
+                Ok((usuario, tok)) => {
+                    loading.set(false);
+                    token.set(Some(tok));
+                    usuario_actual.set(Some(usuario.clone()));
+                    app_state.set(AppState::Authenticated(usuario));
+                }
+                Err(e) => {
+                    loading.set(false);
+                    error.set(e);
+                }
+            }
+        });
+    };
+
+    rsx! {
+        style { {include_str!("../assets/style.css")} }
+
+        div { class: "login-container",
+            div { class: "login-box",
+                h1 { class: "login-title", "🔐 Iniciar Sesión" }
+                p { class: "login-subtitle", "Sistema de Gestión de Salas" }
+
+                if !error.read().is_empty() {
+                    div { class: "error-message",
+                        "{error}"
+                    }
+                }
+
+                form { class: "login-form",
+                    onsubmit: move |e| {
+                        e.prevent_default();
+                        login_handler(());
+                    },
+
+                    div { class: "form-group",
+                        label { r#for: "email", "Email:" }
+                        input {
+                            id: "email",
+                            r#type: "email",
+                            placeholder: "usuario@ejemplo.com",
+                            value: "{email}",
+                            oninput: move |e| email.set(e.value()),
+                            disabled: *loading.read(),
+                        }
+                    }
+
+                    div { class: "form-group",
+                        label { r#for: "password", "Contraseña:" }
+                        input {
+                            id: "password",
+                            r#type: "password",
+                            placeholder: "••••••••",
+                            value: "{password}",
+                            oninput: move |e| password.set(e.value()),
+                            disabled: *loading.read(),
+                        }
+                    }
+
+                    button {
+                        r#type: "submit",
+                        class: "btn btn-primary btn-block",
+                        disabled: *loading.read(),
+                        if *loading.read() {
+                            "⏳ Iniciando sesión..."
+                        } else {
+                            "🚀 Iniciar Sesión"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn SalasApp(
+    usuario: UsuarioInfo,
+    token: Signal<Option<String>>,
+    mut app_state: Signal<AppState>,
+    mut usuario_actual: Signal<Option<UsuarioInfo>>,
+) -> Element {
     let mut salas = use_signal(|| Vec::<SalaDto>::new());
     let mut nuevo_nombre = use_signal(|| String::new());
     let mut nueva_capacidad = use_signal(|| String::from("10"));
@@ -28,15 +185,19 @@ fn App() -> Element {
 
     // Cargar salas al iniciar
     use_effect(move || {
-        spawn(async move {
-            if let Ok(salas_data) = listar_salas().await {
-                salas.set(salas_data);
-            }
-        });
+        let token_val = token.read().clone();
+        if let Some(tok) = token_val {
+            spawn(async move {
+                if let Ok(salas_data) = listar_salas(&tok).await {
+                    salas.set(salas_data);
+                }
+            });
+        }
     });
 
     // Handler para crear sala
     let crear_sala_handler = move |_| {
+        let token_sig = token;
         spawn(async move {
             loading.set(true);
             mensaje.set(String::new());
@@ -59,40 +220,50 @@ fn App() -> Element {
                 }
             };
 
-            match crear_sala(&nombre, capacidad).await {
-                Ok(_) => {
-                    mensaje.set(format!("✅ Sala '{}' creada correctamente", nombre));
-                    nuevo_nombre.set(String::new());
-                    nueva_capacidad.set(String::from("10"));
+            let token_val = token.read().clone();
+            if let Some(tok) = token_val {
+                match crear_sala(&nombre, capacidad, &tok).await {
+                    Ok(_) => {
+                        mensaje.set(format!("✅ Sala '{}' creada correctamente", nombre));
+                        nuevo_nombre.set(String::new());
+                        nueva_capacidad.set(String::from("10"));
 
-                    // Recargar salas
-                    if let Ok(salas_data) = listar_salas().await {
-                        salas.set(salas_data);
+                        // Recargar salas
+                        if let Ok(salas_data) = listar_salas(&tok).await {
+                            salas.set(salas_data);
+                        }
+                    }
+                    Err(e) => {
+                        mensaje.set(format!("❌ Error al crear sala: {}", e));
                     }
                 }
-                Err(e) => {
-                    mensaje.set(format!("❌ Error al crear sala: {}", e));
-                }
+            } else {
+                mensaje.set("❌ Error: No hay token de autenticación".to_string());
             }
-
             loading.set(false);
         });
     };
 
     // Handler para activar sala
     let activar_handler = move |id: String| {
+        let token_sig = token;
         spawn(async move {
             loading.set(true);
-            match activar_sala(&id).await {
-                Ok(_) => {
-                    mensaje.set("✅ Sala activada correctamente".to_string());
-                    if let Ok(salas_data) = listar_salas().await {
-                        salas.set(salas_data);
+            let token_val = token_sig.read().clone();
+            if let Some(tok) = token_val {
+                match activar_sala(&id, &tok).await {
+                    Ok(_) => {
+                        mensaje.set("✅ Sala activada correctamente".to_string());
+                        if let Ok(salas_data) = listar_salas(&tok).await {
+                            salas.set(salas_data);
+                        }
+                    }
+                    Err(e) => {
+                        mensaje.set(format!("❌ Error al activar sala: {}", e));
                     }
                 }
-                Err(e) => {
-                    mensaje.set(format!("❌ Error al activar sala: {}", e));
-                }
+            } else {
+                mensaje.set("❌ Error: No hay token de autenticación".to_string());
             }
             loading.set(false);
         });
@@ -100,18 +271,24 @@ fn App() -> Element {
 
     // Handler para desactivar sala
     let desactivar_handler = move |id: String| {
+        let token_sig = token;
         spawn(async move {
             loading.set(true);
-            match desactivar_sala(&id).await {
-                Ok(_) => {
-                    mensaje.set("✅ Sala desactivada correctamente".to_string());
-                    if let Ok(salas_data) = listar_salas().await {
-                        salas.set(salas_data);
+            let token_val = token_sig.read().clone();
+            if let Some(tok) = token_val {
+                match desactivar_sala(&id, &tok).await {
+                    Ok(_) => {
+                        mensaje.set("✅ Sala desactivada correctamente".to_string());
+                        if let Ok(salas_data) = listar_salas(&tok).await {
+                            salas.set(salas_data);
+                        }
+                    }
+                    Err(e) => {
+                        mensaje.set(format!("❌ Error al desactivar sala: {}", e));
                     }
                 }
-                Err(e) => {
-                    mensaje.set(format!("❌ Error al desactivar sala: {}", e));
-                }
+            } else {
+                mensaje.set("❌ Error: No hay token de autenticación".to_string());
             }
             loading.set(false);
         });
@@ -119,13 +296,19 @@ fn App() -> Element {
 
     // Handler para recargar salas
     let recargar_handler = move |_| {
+        let token_sig = token;
         spawn(async move {
             loading.set(true);
-            if let Ok(salas_data) = listar_salas().await {
-                salas.set(salas_data);
-                mensaje.set("✅ Salas actualizadas".to_string());
+            let token_val = token_sig.read().clone();
+            if let Some(tok) = token_val {
+                if let Ok(salas_data) = listar_salas(&tok).await {
+                    salas.set(salas_data);
+                    mensaje.set("✅ Salas actualizadas".to_string());
+                } else {
+                    mensaje.set("❌ Error al actualizar salas".to_string());
+                }
             } else {
-                mensaje.set("❌ Error al actualizar salas".to_string());
+                mensaje.set("❌ Error: No hay token de autenticación".to_string());
             }
             loading.set(false);
         });
@@ -135,8 +318,26 @@ fn App() -> Element {
         style { {include_str!("../assets/style.css")} }
 
         div { class: "container",
-            h1 { class: "title", "🏢 Gestión de Salas" }
-            p { class: "subtitle", "Sistema de reservas - Dioxus Desktop" }
+            div { class: "header-with-user",
+                div {
+                    h1 { class: "title", "🏢 Gestión de Salas" }
+                    p { class: "subtitle", "Sistema de reservas - Dioxus Desktop" }
+                }
+                div { class: "user-info",
+                    div { class: "user-name", "👤 {usuario.nombre}" }
+                    div { class: "user-email", "📧 {usuario.email}" }
+                    div { class: "user-rol", "🎫 {usuario.rol}" }
+                    button {
+                        class: "btn btn-secondary",
+                        onclick: move |_| {
+                            token.set(None);
+                            usuario_actual.set(None);
+                            app_state.set(AppState::Login);
+                        },
+                        "🚪 Salir"
+                    }
+                }
+            }
 
             // Banner informativo
             div { class: "banner",
@@ -265,17 +466,47 @@ fn App() -> Element {
     }
 }
 
-// API functions
-async fn listar_salas() -> Result<Vec<SalaDto>, String> {
+// API functions - Login
+async fn login_usuario(email: &str, password: &str) -> Result<(UsuarioInfo, String), String> {
+    let mut client = UsuarioServiceClient::connect(GRPC_URL)
+        .await
+        .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+    let request = Request::new(LoginRequest {
+        email: email.to_string(),
+        password: password.to_string(),
+    });
+
+    let response = client.login(request).await
+        .map_err(|e| format!("Error al hacer login: {}", e))?;
+
+    let login_response = response.into_inner();
+    let usuario_proto = login_response.usuario.ok_or_else(|| "Respuesta sin usuario".to_string())?;
+
+    let usuario = UsuarioInfo {
+        id: usuario_proto.id,
+        nombre: usuario_proto.nombre,
+        email: usuario_proto.email,
+        rol: usuario_proto.rol,
+    };
+
+    Ok((usuario, login_response.token))
+}
+
+// API functions - Salas
+async fn listar_salas(token: &str) -> Result<Vec<SalaDto>, String> {
     let client = reqwest::Client::new();
     let response = client
         .get(format!("{}/salas", BACKEND_URL))
+        .header("Authorization", format!("Bearer {}", token))
         .send()
         .await
         .map_err(|e| format!("Error de conexión: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!("Error HTTP: {}", response.status()));
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
     }
 
     response
@@ -284,7 +515,7 @@ async fn listar_salas() -> Result<Vec<SalaDto>, String> {
         .map_err(|e| format!("Error al parsear respuesta: {}", e))
 }
 
-async fn crear_sala(nombre: &str, capacidad: u32) -> Result<SalaDto, String> {
+async fn crear_sala(nombre: &str, capacidad: u32, token: &str) -> Result<SalaDto, String> {
     let client = reqwest::Client::new();
     let body = serde_json::json!({
         "nombre": nombre,
@@ -293,13 +524,16 @@ async fn crear_sala(nombre: &str, capacidad: u32) -> Result<SalaDto, String> {
 
     let response = client
         .post(format!("{}/salas", BACKEND_URL))
+        .header("Authorization", format!("Bearer {}", token))
         .json(&body)
         .send()
         .await
         .map_err(|e| format!("Error de conexión: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!("Error HTTP: {}", response.status()));
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
     }
 
     response
@@ -308,16 +542,19 @@ async fn crear_sala(nombre: &str, capacidad: u32) -> Result<SalaDto, String> {
         .map_err(|e| format!("Error al parsear respuesta: {}", e))
 }
 
-async fn activar_sala(id: &str) -> Result<SalaDto, String> {
+async fn activar_sala(id: &str, token: &str) -> Result<SalaDto, String> {
     let client = reqwest::Client::new();
     let response = client
         .put(format!("{}/salas/{}/activar", BACKEND_URL, id))
+        .header("Authorization", format!("Bearer {}", token))
         .send()
         .await
         .map_err(|e| format!("Error de conexión: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!("Error HTTP: {}", response.status()));
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
     }
 
     response
@@ -326,16 +563,19 @@ async fn activar_sala(id: &str) -> Result<SalaDto, String> {
         .map_err(|e| format!("Error al parsear respuesta: {}", e))
 }
 
-async fn desactivar_sala(id: &str) -> Result<SalaDto, String> {
+async fn desactivar_sala(id: &str, token: &str) -> Result<SalaDto, String> {
     let client = reqwest::Client::new();
     let response = client
         .put(format!("{}/salas/{}/desactivar", BACKEND_URL, id))
+        .header("Authorization", format!("Bearer {}", token))
         .send()
         .await
         .map_err(|e| format!("Error de conexión: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!("Error HTTP: {}", response.status()));
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
     }
 
     response
