@@ -17,5 +17,5 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 chrono = { workspace = true }
-tonic = "0.12"
+tonic = { workspace = true }
 usuarios-grpc = { path = "../../features/usuarios/grpc" }
