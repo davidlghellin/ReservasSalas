@@ -3,8 +3,9 @@ use axum::Router;
 use salas_api::routes::salas_routes;
 use salas_application::SalaServiceImpl;
 use salas_grpc::SalaGrpcServer;
-use salas_infrastructure::InMemorySalaRepository;
+use salas_infrastructure::FileSalaRepository;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tonic::transport::Server;
 use tower_http::cors::{Any, CorsLayer};
@@ -19,12 +20,20 @@ async fn main() {
 
     tracing::info!("🚀 Iniciando servidor de Reservas de Salas");
 
-    // Crear el repositorio y el servicio compartido
-    let repository = InMemorySalaRepository::new();
+    // Crear el repositorio de archivo JSON
+    let repository: FileSalaRepository = FileSalaRepository::new(PathBuf::from("./data/salas.json"));
+
+    // Inicializar (cargar datos existentes del archivo)
+    repository.init().await
+        .expect("Error al inicializar repositorio de archivo");
+
+    tracing::info!("✓ Repositorio de archivo JSON inicializado (./data/salas.json)");
+
+    // Crear el servicio compartido
     let service: Arc<dyn salas_application::SalaService + Send + Sync> =
         Arc::new(SalaServiceImpl::new(repository));
 
-    tracing::info!("✓ Repositorio y servicio inicializados");
+    tracing::info!("✓ Servicio inicializado");
 
     // Configurar CORS para la API REST
     let cors = CorsLayer::new()

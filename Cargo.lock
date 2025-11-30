@@ -7885,6 +7885,9 @@ dependencies = [
  "async-trait",
  "salas-application",
  "salas-domain",
+ "serde",
+ "serde_json",
+ "tempfile",
  "tokio",
 ]
 

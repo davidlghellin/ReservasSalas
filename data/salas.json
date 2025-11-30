@@ -1,0 +1,16 @@
+{
+  "salas": {
+    "8873c7b3-b391-4ce2-9844-5fd79df29fea": {
+      "id": "8873c7b3-b391-4ce2-9844-5fd79df29fea",
+      "nombre": "rome",
+      "capacidad": 10,
+      "activa": true
+    },
+    "b241309c-ebf6-4f06-bfa0-8aef5697979a": {
+      "id": "b241309c-ebf6-4f06-bfa0-8aef5697979a",
+      "nombre": "andromeda",
+      "capacidad": 1,
+      "activa": true
+    }
+  }
+}
