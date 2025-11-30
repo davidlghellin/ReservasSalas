@@ -41,9 +41,9 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let mut app_state = use_signal(|| AppState::Login);
-    let mut token = use_signal(|| Option::<String>::None);
-    let mut usuario_actual = use_signal(|| Option::<UsuarioInfo>::None);
+    let app_state = use_signal(|| AppState::Login);
+    let token = use_signal(|| Option::<String>::None);
+    let usuario_actual = use_signal(|| Option::<UsuarioInfo>::None);
 
     let current_state = app_state.read().clone();
     
