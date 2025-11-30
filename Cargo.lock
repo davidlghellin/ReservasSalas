@@ -259,10 +259,8 @@ name = "app-tui"
 version = "0.1.0"
 dependencies = [
  "crossterm",
- "prost",
  "ratatui",
  "salas-grpc",
- "serde",
  "tokio",
  "tonic",
  "usuarios-grpc",
