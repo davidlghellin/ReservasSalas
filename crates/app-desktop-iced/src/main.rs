@@ -749,6 +749,25 @@ fn is_connection_error(status: &tonic::Status) -> bool {
 
 // -------- API gRPC usando el cliente compartido con retry --------
 
+// -------- Helpers para JWT --------
+
+/// Obtiene el token JWT almacenado
+async fn get_jwt_token() -> Option<String> {
+    let guard = JWT_TOKEN.lock().await;
+    guard.clone()
+}
+
+/// Agrega el token JWT al header de autorización de una request gRPC
+fn add_auth_token<T>(request: &mut Request<T>, token: &str) -> Result<(), String> {
+    use tonic::metadata::MetadataValue;
+
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header de autorización: {}", e))?;
+
+    request.metadata_mut().insert("authorization", auth_value);
+    Ok(())
+}
+
 // -------- API gRPC de Login --------
 
 async fn login_usuario(email: String, password: String) -> Result<(String, UsuarioInfo), String> {
@@ -779,7 +798,14 @@ async fn login_usuario(email: String, password: String) -> Result<(String, Usuar
 
 async fn listar_salas() -> Result<Vec<SalaDto>, String> {
     let response = with_sala_retry(|mut client| async move {
-        let request: Request<ListarSalasRequest> = Request::new(ListarSalasRequest {});
+        let mut request: Request<ListarSalasRequest> = Request::new(ListarSalasRequest {});
+
+        // Agregar token JWT si existe
+        if let Some(token) = get_jwt_token().await {
+            add_auth_token(&mut request, &token)
+                .map_err(|e| tonic::Status::internal(e))?;
+        }
+
         client.listar_salas(request).await
     })
     .await?;
@@ -791,8 +817,15 @@ async fn crear_sala(nombre: String, capacidad: u32) -> Result<SalaDto, String> {
     let response = with_sala_retry(move |mut client| {
         let nombre = nombre.clone();
         async move {
-            let request: Request<CrearSalaRequest> =
+            let mut request: Request<CrearSalaRequest> =
                 Request::new(CrearSalaRequest { nombre, capacidad });
+
+            // Agregar token JWT si existe
+            if let Some(token) = get_jwt_token().await {
+                add_auth_token(&mut request, &token)
+                    .map_err(|e| tonic::Status::internal(e))?;
+            }
+
             client.crear_sala(request).await
         }
     })
@@ -805,7 +838,14 @@ async fn activar_sala(id: String) -> Result<SalaDto, String> {
     let response = with_sala_retry(move |mut client| {
         let id = id.clone();
         async move {
-            let request: Request<ActivarSalaRequest> = Request::new(ActivarSalaRequest { id });
+            let mut request: Request<ActivarSalaRequest> = Request::new(ActivarSalaRequest { id });
+
+            // Agregar token JWT si existe
+            if let Some(token) = get_jwt_token().await {
+                add_auth_token(&mut request, &token)
+                    .map_err(|e| tonic::Status::internal(e))?;
+            }
+
             client.activar_sala(request).await
         }
     })
@@ -818,8 +858,15 @@ async fn desactivar_sala(id: String) -> Result<SalaDto, String> {
     let response = with_sala_retry(move |mut client| {
         let id = id.clone();
         async move {
-            let request: Request<DesactivarSalaRequest> =
+            let mut request: Request<DesactivarSalaRequest> =
                 Request::new(DesactivarSalaRequest { id });
+
+            // Agregar token JWT si existe
+            if let Some(token) = get_jwt_token().await {
+                add_auth_token(&mut request, &token)
+                    .map_err(|e| tonic::Status::internal(e))?;
+            }
+
             client.desactivar_sala(request).await
         }
     })

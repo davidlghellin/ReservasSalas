@@ -4,6 +4,8 @@ use tonic::{Request, Response, Status};
 use salas_application::SalaService;
 use salas_domain::SalaError;
 
+use crate::auth::extract_auth_user;
+
 use crate::proto::{
     sala_service_server::{SalaService as SalaServiceTrait, SalaServiceServer},
     ActivarSalaRequest, CrearSalaRequest, DesactivarSalaRequest, ListarSalasRequest,
@@ -30,6 +32,9 @@ impl SalaServiceTrait for SalaGrpcServer {
         &self,
         request: Request<CrearSalaRequest>,
     ) -> Result<Response<SalaResponse>, Status> {
+        // Requiere autenticación
+        extract_auth_user(&request)?;
+
         let req = request.into_inner();
 
         let sala = self
@@ -50,6 +55,9 @@ impl SalaServiceTrait for SalaGrpcServer {
         &self,
         request: Request<ObtenerSalaRequest>,
     ) -> Result<Response<SalaResponse>, Status> {
+        // Requiere autenticación
+        extract_auth_user(&request)?;
+
         let req = request.into_inner();
 
         let sala = self
@@ -69,8 +77,11 @@ impl SalaServiceTrait for SalaGrpcServer {
 
     async fn listar_salas(
         &self,
-        _request: Request<ListarSalasRequest>,
+        request: Request<ListarSalasRequest>,
     ) -> Result<Response<ListarSalasResponse>, Status> {
+        // Requiere autenticación
+        extract_auth_user(&request)?;
+
         let salas = self
             .service
             .listar_salas()
@@ -96,6 +107,9 @@ impl SalaServiceTrait for SalaGrpcServer {
         &self,
         request: Request<ActivarSalaRequest>,
     ) -> Result<Response<SalaResponse>, Status> {
+        // Requiere autenticación
+        extract_auth_user(&request)?;
+
         let req = request.into_inner();
 
         let sala = self
@@ -116,6 +130,9 @@ impl SalaServiceTrait for SalaGrpcServer {
         &self,
         request: Request<DesactivarSalaRequest>,
     ) -> Result<Response<SalaResponse>, Status> {
+        // Requiere autenticación
+        extract_auth_user(&request)?;
+
         let req = request.into_inner();
 
         let sala = self

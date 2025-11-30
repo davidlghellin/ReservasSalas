@@ -18,6 +18,7 @@ prost = "0.12"
 salas-domain = { path = "../features/salas/domain" }
 salas-application = { path = "../features/salas/application" }
 salas-infrastructure = { path = "../features/salas/infrastructure" }
+salas-grpc = { path = "../features/salas/grpc" }
 usuarios-grpc = { path = "../features/usuarios/grpc" }
 
 [[bin]]
