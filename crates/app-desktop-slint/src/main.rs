@@ -1,17 +1,24 @@
 slint::include_modules!();
 
-use serde::{Deserialize, Serialize};
 use slint::{ModelRc, VecModel};
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
+use tokio::runtime::Runtime;
+use tonic::{metadata::MetadataValue, Request};
 
-const BACKEND_URL: &str = "http://localhost:3000/api";
+use salas_grpc::proto::{
+    sala_service_client::SalaServiceClient, ActivarSalaRequest, CrearSalaRequest,
+    DesactivarSalaRequest, ListarSalasRequest,
+};
+use usuarios_grpc::proto::{
+    usuario_service_client::UsuarioServiceClient, LoginRequest,
+};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct SalaDto {
-    id: String,
-    nombre: String,
-    capacidad: u32,
-    activa: bool,
+const GRPC_URL: &str = "http://localhost:50051";
+
+// Token JWT global (simple para demo)
+lazy_static::lazy_static! {
+    static ref JWT_TOKEN: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 }
 
 fn main() -> Result<(), slint::PlatformError> {
@@ -21,8 +28,17 @@ fn main() -> Result<(), slint::PlatformError> {
     let salas_model: Rc<VecModel<Sala>> = Rc::new(VecModel::default());
     ui.set_salas(ModelRc::from(salas_model.clone()));
 
-    // Cargar salas al iniciar
-    cargar_salas_ui(&ui, &salas_model);
+    // Intentar login por defecto con credenciales de prueba
+    // En una app real, tendrías una pantalla de login
+    match login("admin@reservas.com", "admin123") {
+        Ok(_) => {
+            ui.set_mensaje("✅ Conectado al servidor gRPC".into());
+            cargar_salas_ui(&ui, &salas_model);
+        }
+        Err(e) => {
+            ui.set_mensaje(format!("⚠️ Login automático falló: {}. Funcionalidad limitada.", e).into());
+        }
+    }
 
     // Callback: Crear sala
     {
@@ -145,73 +161,173 @@ fn cargar_salas_ui(ui: &AppWindow, model: &Rc<VecModel<Sala>>) {
     }
 }
 
-// API functions usando reqwest bloqueante
+// Helper para añadir token JWT a la request
+fn add_auth_token<T>(request: &mut Request<T>) -> Result<(), String> {
+    let token = JWT_TOKEN
+        .lock()
+        .map_err(|e| format!("Error al acceder al token: {}", e))?
+        .clone()
+        .ok_or_else(|| "No hay token de autenticación disponible".to_string())?;
+
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header de autorización: {}", e))?;
+
+    request.metadata_mut().insert("authorization", auth_value);
+    Ok(())
+}
+
+// API functions usando gRPC con tokio runtime
+fn login(email: &str, password: &str) -> Result<String, String> {
+    let rt = Runtime::new().map_err(|e| format!("Error al crear runtime: {}", e))?;
+
+    rt.block_on(async {
+        let mut client = UsuarioServiceClient::connect(GRPC_URL)
+            .await
+            .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+        let request = Request::new(LoginRequest {
+            email: email.to_string(),
+            password: password.to_string(),
+        });
+
+        let response = client
+            .login(request)
+            .await
+            .map_err(|e| format!("Error de login: {}", e))?;
+
+        let token = response.into_inner().token;
+
+        // Guardar token
+        JWT_TOKEN
+            .lock()
+            .map_err(|e| format!("Error al guardar token: {}", e))?
+            .replace(token.clone());
+
+        Ok(token)
+    })
+}
+
 fn listar_salas() -> Result<Vec<SalaDto>, String> {
-    let client = reqwest::blocking::Client::new();
-    let response = client
-        .get(format!("{}/salas", BACKEND_URL))
-        .send()
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+    let rt = Runtime::new().map_err(|e| format!("Error al crear runtime: {}", e))?;
 
-    if !response.status().is_success() {
-        return Err(format!("Error HTTP: {}", response.status()));
-    }
+    rt.block_on(async {
+        let mut client = SalaServiceClient::connect(GRPC_URL)
+            .await
+            .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-    response
-        .json::<Vec<SalaDto>>()
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+        let mut request = Request::new(ListarSalasRequest {});
+        add_auth_token(&mut request)?;
+
+        let response = client
+            .listar_salas(request)
+            .await
+            .map_err(|e| format!("Error gRPC: {}", e))?;
+
+        let salas = response
+            .into_inner()
+            .salas
+            .into_iter()
+            .map(|s| SalaDto {
+                id: s.id,
+                nombre: s.nombre,
+                capacidad: s.capacidad,
+                activa: s.activa,
+            })
+            .collect();
+
+        Ok(salas)
+    })
 }
 
 fn crear_sala(nombre: &str, capacidad: u32) -> Result<SalaDto, String> {
-    let client = reqwest::blocking::Client::new();
-    let body = serde_json::json!({
-        "nombre": nombre,
-        "capacidad": capacidad
-    });
+    let rt = Runtime::new().map_err(|e| format!("Error al crear runtime: {}", e))?;
 
-    let response = client
-        .post(format!("{}/salas", BACKEND_URL))
-        .json(&body)
-        .send()
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+    rt.block_on(async {
+        let mut client = SalaServiceClient::connect(GRPC_URL)
+            .await
+            .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-    if !response.status().is_success() {
-        return Err(format!("Error HTTP: {}", response.status()));
-    }
+        let mut request = Request::new(CrearSalaRequest {
+            nombre: nombre.to_string(),
+            capacidad,
+        });
+        add_auth_token(&mut request)?;
 
-    response
-        .json::<SalaDto>()
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+        let response = client
+            .crear_sala(request)
+            .await
+            .map_err(|e| format!("Error gRPC: {}", e))?;
+
+        let sala = response.into_inner();
+        Ok(SalaDto {
+            id: sala.id,
+            nombre: sala.nombre,
+            capacidad: sala.capacidad,
+            activa: sala.activa,
+        })
+    })
 }
 
 fn activar_sala(id: &str) -> Result<SalaDto, String> {
-    let client = reqwest::blocking::Client::new();
-    let response = client
-        .put(format!("{}/salas/{}/activar", BACKEND_URL, id))
-        .send()
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+    let rt = Runtime::new().map_err(|e| format!("Error al crear runtime: {}", e))?;
 
-    if !response.status().is_success() {
-        return Err(format!("Error HTTP: {}", response.status()));
-    }
+    rt.block_on(async {
+        let mut client = SalaServiceClient::connect(GRPC_URL)
+            .await
+            .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-    response
-        .json::<SalaDto>()
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+        let mut request = Request::new(ActivarSalaRequest {
+            id: id.to_string(),
+        });
+        add_auth_token(&mut request)?;
+
+        let response = client
+            .activar_sala(request)
+            .await
+            .map_err(|e| format!("Error gRPC: {}", e))?;
+
+        let sala = response.into_inner();
+        Ok(SalaDto {
+            id: sala.id,
+            nombre: sala.nombre,
+            capacidad: sala.capacidad,
+            activa: sala.activa,
+        })
+    })
 }
 
 fn desactivar_sala(id: &str) -> Result<SalaDto, String> {
-    let client = reqwest::blocking::Client::new();
-    let response = client
-        .put(format!("{}/salas/{}/desactivar", BACKEND_URL, id))
-        .send()
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+    let rt = Runtime::new().map_err(|e| format!("Error al crear runtime: {}", e))?;
 
-    if !response.status().is_success() {
-        return Err(format!("Error HTTP: {}", response.status()));
-    }
+    rt.block_on(async {
+        let mut client = SalaServiceClient::connect(GRPC_URL)
+            .await
+            .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-    response
-        .json::<SalaDto>()
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+        let mut request = Request::new(DesactivarSalaRequest {
+            id: id.to_string(),
+        });
+        add_auth_token(&mut request)?;
+
+        let response = client
+            .desactivar_sala(request)
+            .await
+            .map_err(|e| format!("Error gRPC: {}", e))?;
+
+        let sala = response.into_inner();
+        Ok(SalaDto {
+            id: sala.id,
+            nombre: sala.nombre,
+            capacidad: sala.capacidad,
+            activa: sala.activa,
+        })
+    })
+}
+
+#[derive(Debug, Clone)]
+struct SalaDto {
+    id: String,
+    nombre: String,
+    capacidad: u32,
+    activa: bool,
 }

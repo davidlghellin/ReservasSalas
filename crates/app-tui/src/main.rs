@@ -1,14 +1,12 @@
 use crossterm::{event, terminal, ExecutableCommand};
 use ratatui::{prelude::*, widgets::*};
-use reqwest::Client;
-use serde::Deserialize;
-use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest};
-use tonic::Request;
+use tonic::{metadata::MetadataValue, Request};
 
-const API_BASE_URL: &str = "http://localhost:3000/api";
+use salas_grpc::proto::{sala_service_client::SalaServiceClient, ListarSalasRequest};
+use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest};
+
 const GRPC_URL: &str = "http://localhost:50051";
 
-#[derive(Deserialize)]
 struct Sala {
     id: String,
     nombre: String,
@@ -383,22 +381,33 @@ async fn login_usuario(email: String, password: String) -> Result<(UsuarioInfo, 
 }
 
 async fn listar_salas(token: &str) -> Result<Vec<Sala>, String> {
-    let client = Client::new();
+    let mut client = SalaServiceClient::connect(GRPC_URL)
+        .await
+        .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+    let mut request = Request::new(ListarSalasRequest {});
+
+    // Añadir token JWT al header
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header de autorización: {}", e))?;
+    request.metadata_mut().insert("authorization", auth_value);
+
     let response = client
-        .get(format!("{}/salas", API_BASE_URL))
-        .header("Authorization", format!("Bearer {}", token))
-        .send()
+        .listar_salas(request)
         .await
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+        .map_err(|e| format!("Error gRPC al listar salas: {}", e))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
-    }
+    let salas = response
+        .into_inner()
+        .salas
+        .into_iter()
+        .map(|s| Sala {
+            id: s.id,
+            nombre: s.nombre,
+            capacidad: s.capacidad,
+            activa: s.activa,
+        })
+        .collect();
 
-    response
-        .json::<Vec<Sala>>()
-        .await
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+    Ok(salas)
 }

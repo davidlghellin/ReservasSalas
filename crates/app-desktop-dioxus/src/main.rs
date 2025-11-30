@@ -3,7 +3,11 @@
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest};
-use tonic::Request;
+use salas_grpc::proto::{
+    sala_service_client::SalaServiceClient, ActivarSalaRequest, CrearSalaRequest,
+    DesactivarSalaRequest, ListarSalasRequest,
+};
+use tonic::{metadata::MetadataValue, Request};
 
 const BACKEND_URL: &str = "http://localhost:3000/api";
 const GRPC_URL: &str = "http://localhost:50051";
@@ -493,93 +497,123 @@ async fn login_usuario(email: &str, password: &str) -> Result<(UsuarioInfo, Stri
     Ok((usuario, login_response.token))
 }
 
-// API functions - Salas
+// API functions - Salas (gRPC)
 async fn listar_salas(token: &str) -> Result<Vec<SalaDto>, String> {
-    let client = reqwest::Client::new();
+    let mut client = SalaServiceClient::connect(GRPC_URL)
+        .await
+        .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+    let mut request = Request::new(ListarSalasRequest {});
+
+    // Agregar token JWT
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header: {}", e))?;
+    request.metadata_mut().insert("authorization", auth_value);
+
     let response = client
-        .get(format!("{}/salas", BACKEND_URL))
-        .header("Authorization", format!("Bearer {}", token))
-        .send()
+        .listar_salas(request)
         .await
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+        .map_err(|e| format!("Error gRPC: {}", e))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
-    }
+    let salas = response
+        .into_inner()
+        .salas
+        .into_iter()
+        .map(|s| SalaDto {
+            id: s.id,
+            nombre: s.nombre,
+            capacidad: s.capacidad,
+            activa: s.activa,
+        })
+        .collect();
 
-    response
-        .json::<Vec<SalaDto>>()
-        .await
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+    Ok(salas)
 }
 
 async fn crear_sala(nombre: &str, capacidad: u32, token: &str) -> Result<SalaDto, String> {
-    let client = reqwest::Client::new();
-    let body = serde_json::json!({
-        "nombre": nombre,
-        "capacidad": capacidad
+    let mut client = SalaServiceClient::connect(GRPC_URL)
+        .await
+        .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+    let mut request = Request::new(CrearSalaRequest {
+        nombre: nombre.to_string(),
+        capacidad,
     });
 
+    // Agregar token JWT
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header: {}", e))?;
+    request.metadata_mut().insert("authorization", auth_value);
+
     let response = client
-        .post(format!("{}/salas", BACKEND_URL))
-        .header("Authorization", format!("Bearer {}", token))
-        .json(&body)
-        .send()
+        .crear_sala(request)
         .await
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+        .map_err(|e| format!("Error gRPC: {}", e))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
-    }
+    let sala = response.into_inner();
 
-    response
-        .json::<SalaDto>()
-        .await
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+    Ok(SalaDto {
+        id: sala.id,
+        nombre: sala.nombre,
+        capacidad: sala.capacidad,
+        activa: sala.activa,
+    })
 }
 
 async fn activar_sala(id: &str, token: &str) -> Result<SalaDto, String> {
-    let client = reqwest::Client::new();
+    let mut client = SalaServiceClient::connect(GRPC_URL)
+        .await
+        .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+    let mut request = Request::new(ActivarSalaRequest {
+        id: id.to_string(),
+    });
+
+    // Agregar token JWT
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header: {}", e))?;
+    request.metadata_mut().insert("authorization", auth_value);
+
     let response = client
-        .put(format!("{}/salas/{}/activar", BACKEND_URL, id))
-        .header("Authorization", format!("Bearer {}", token))
-        .send()
+        .activar_sala(request)
         .await
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+        .map_err(|e| format!("Error gRPC: {}", e))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
-    }
+    let sala = response.into_inner();
 
-    response
-        .json::<SalaDto>()
-        .await
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+    Ok(SalaDto {
+        id: sala.id,
+        nombre: sala.nombre,
+        capacidad: sala.capacidad,
+        activa: sala.activa,
+    })
 }
 
 async fn desactivar_sala(id: &str, token: &str) -> Result<SalaDto, String> {
-    let client = reqwest::Client::new();
+    let mut client = SalaServiceClient::connect(GRPC_URL)
+        .await
+        .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+    let mut request = Request::new(DesactivarSalaRequest {
+        id: id.to_string(),
+    });
+
+    // Agregar token JWT
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header: {}", e))?;
+    request.metadata_mut().insert("authorization", auth_value);
+
     let response = client
-        .put(format!("{}/salas/{}/desactivar", BACKEND_URL, id))
-        .header("Authorization", format!("Bearer {}", token))
-        .send()
+        .desactivar_sala(request)
         .await
-        .map_err(|e| format!("Error de conexión: {}", e))?;
+        .map_err(|e| format!("Error gRPC: {}", e))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(format!("Error HTTP {}: {}", status.as_u16(), error_text));
-    }
+    let sala = response.into_inner();
 
-    response
-        .json::<SalaDto>()
-        .await
-        .map_err(|e| format!("Error al parsear respuesta: {}", e))
+    Ok(SalaDto {
+        id: sala.id,
+        nombre: sala.nombre,
+        capacidad: sala.capacidad,
+        activa: sala.activa,
+    })
 }

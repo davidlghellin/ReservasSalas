@@ -195,9 +195,12 @@ dependencies = [
  "anyhow",
  "clap",
  "colored",
- "reqwest",
+ "prost 0.13.5",
+ "salas-grpc",
  "serde",
  "tokio",
+ "tonic",
+ "usuarios-grpc",
 ]
 
 [[package]]
@@ -227,6 +230,7 @@ dependencies = [
  "reqwest",
  "salas-application",
  "salas-domain",
+ "salas-grpc",
  "salas-infrastructure",
  "serde",
  "serde_json",
@@ -252,11 +256,15 @@ dependencies = [
 name = "app-desktop-slint"
 version = "0.1.0"
 dependencies = [
- "reqwest",
+ "lazy_static",
+ "prost 0.13.5",
+ "salas-grpc",
  "serde",
- "serde_json",
  "slint",
  "slint-build",
+ "tokio",
+ "tonic",
+ "usuarios-grpc",
 ]
 
 [[package]]
@@ -264,10 +272,10 @@ name = "app-tui"
 version = "0.1.0"
 dependencies = [
  "crossterm",
+ "prost 0.13.5",
  "ratatui",
- "reqwest",
+ "salas-grpc",
  "serde",
- "serde_json",
  "tokio",
  "tonic",
  "usuarios-grpc",
@@ -7607,7 +7615,6 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "encoding_rs",
- "futures-channel",
  "futures-core",
  "futures-util",
  "h2",
@@ -7979,6 +7986,8 @@ dependencies = [
  "tokio",
  "tonic",
  "tonic-build",
+ "usuarios-auth",
+ "usuarios-domain",
 ]
 
 [[package]]

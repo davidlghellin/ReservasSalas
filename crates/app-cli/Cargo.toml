@@ -9,15 +9,19 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
-
 serde = { version = "1.0.228", features = ["derive"] }
 
-# HTTP Client
-reqwest = { version = "0.12", features = ["json"] }
+# gRPC Client
 tokio = { version = "1.35", features = ["full"] }
+tonic = "0.12"
+prost = "0.13"
 
 # Terminal output
 colored = "2.1"
 
 # Error handling
 anyhow = "1.0"
+
+# Dependencias locales
+salas-grpc = { path = "../features/salas/grpc" }
+usuarios-grpc = { path = "../features/usuarios/grpc" }

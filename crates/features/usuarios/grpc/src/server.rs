@@ -4,6 +4,8 @@ use tonic::{Request, Response, Status};
 use usuarios_application::{AuthService, UsuarioService};
 use usuarios_domain::{Rol, UsuarioError};
 
+use crate::auth::{extract_admin_user, extract_auth_user};
+
 use crate::proto::{
     usuario_service_server::{UsuarioService as UsuarioServiceTrait, UsuarioServiceServer},
     ActivarUsuarioRequest, ActivarUsuarioResponse, ActualizarNombreRequest,
@@ -115,7 +117,16 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
         &self,
         request: Request<ChangePasswordRequest>,
     ) -> Result<Response<ChangePasswordResponse>, Status> {
+        // Validar autenticación
+        let auth_user = extract_auth_user(&request)?;
         let req = request.into_inner();
+
+        // Solo se puede cambiar la propia contraseña
+        if auth_user.user_id != req.user_id {
+            return Err(Status::permission_denied(
+                "Solo puedes cambiar tu propia contraseña",
+            ));
+        }
 
         self.auth_service
             .change_password(req.user_id, req.old_password, req.new_password)
@@ -130,8 +141,11 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
 
     async fn listar_usuarios(
         &self,
-        _request: Request<ListarUsuariosRequest>,
+        request: Request<ListarUsuariosRequest>,
     ) -> Result<Response<ListarUsuariosResponse>, Status> {
+        // Requiere rol de administrador
+        extract_admin_user(&request)?;
+
         let usuarios = self
             .usuario_service
             .listar_usuarios()
@@ -159,6 +173,9 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
         &self,
         request: Request<ObtenerUsuarioRequest>,
     ) -> Result<Response<UsuarioPublicoResponse>, Status> {
+        // Requiere autenticación
+        extract_auth_user(&request)?;
+
         let req = request.into_inner();
 
         let usuario = self
@@ -183,7 +200,16 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
         &self,
         request: Request<ActualizarNombreRequest>,
     ) -> Result<Response<UsuarioPublicoResponse>, Status> {
+        // Validar autenticación
+        let auth_user = extract_auth_user(&request)?;
         let req = request.into_inner();
+
+        // Solo se puede actualizar el propio nombre
+        if auth_user.user_id != req.user_id {
+            return Err(Status::permission_denied(
+                "Solo puedes actualizar tu propio nombre",
+            ));
+        }
 
         let usuario = self
             .usuario_service
@@ -207,6 +233,8 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
         &self,
         request: Request<ActualizarRolRequest>,
     ) -> Result<Response<UsuarioPublicoResponse>, Status> {
+        // Requiere rol de administrador
+        let auth_user = extract_admin_user(&request)?;
         let req = request.into_inner();
 
         let nuevo_rol = Rol::from_str(&req.nuevo_rol)
@@ -214,7 +242,7 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
 
         let usuario = self
             .usuario_service
-            .actualizar_rol(req.admin_id, req.user_id, nuevo_rol)
+            .actualizar_rol(auth_user.user_id, req.user_id, nuevo_rol)
             .await
             .map_err(usuario_error_to_status)?;
 
@@ -234,10 +262,12 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
         &self,
         request: Request<DesactivarUsuarioRequest>,
     ) -> Result<Response<DesactivarUsuarioResponse>, Status> {
+        // Requiere rol de administrador
+        let auth_user = extract_admin_user(&request)?;
         let req = request.into_inner();
 
         self.usuario_service
-            .desactivar_usuario(req.admin_id, req.user_id)
+            .desactivar_usuario(auth_user.user_id, req.user_id)
             .await
             .map_err(usuario_error_to_status)?;
 
@@ -251,10 +281,12 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
         &self,
         request: Request<ActivarUsuarioRequest>,
     ) -> Result<Response<ActivarUsuarioResponse>, Status> {
+        // Requiere rol de administrador
+        let auth_user = extract_admin_user(&request)?;
         let req = request.into_inner();
 
         self.usuario_service
-            .activar_usuario(req.admin_id, req.user_id)
+            .activar_usuario(auth_user.user_id, req.user_id)
             .await
             .map_err(usuario_error_to_status)?;
 

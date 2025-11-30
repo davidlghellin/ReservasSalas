@@ -1,5 +1,7 @@
+pub mod auth;
 pub mod server;
 
+pub use auth::{extract_admin_user, extract_auth_user, AuthUser};
 pub use server::SalaGrpcServer;
 
 // Re-exportar los tipos generados por tonic
