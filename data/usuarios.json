@@ -1,0 +1,24 @@
+{
+  "usuarios": {
+    "b9b6d22f-62f4-46c6-969f-8cb2cfeaa45f": {
+      "id": "b9b6d22f-62f4-46c6-969f-8cb2cfeaa45f",
+      "nombre": "Administrador",
+      "email": "admin@reservas.com",
+      "password_hash": "$argon2id$v=19$m=19456,t=2,p=1$n3uMN7XpX9laXTVh8nenoA$aO/EJCeUvt7/iOPn23+cE0y3HQVilNJCtTX2ihWM3To",
+      "rol": "Admin",
+      "created_at": "2025-11-30T10:49:05.703169Z",
+      "updated_at": "2025-11-30T10:49:05.703169Z",
+      "activo": true
+    },
+    "5a240e87-681d-43f4-a720-091dcd4e2525": {
+      "id": "5a240e87-681d-43f4-a720-091dcd4e2525",
+      "nombre": "David",
+      "email": "hola@david.com",
+      "password_hash": "$argon2id$v=19$m=19456,t=2,p=1$g4HthlqW+AtIjA4K1K4hkg$XAHL6jAQUJzy/W6Chpj6QwowjlI/+OGPK48ilvFC9Wg",
+      "rol": "Admin",
+      "created_at": "2025-11-30T11:07:09.834815Z",
+      "updated_at": "2025-11-30T11:07:09.834815Z",
+      "activo": true
+    }
+  }
+}

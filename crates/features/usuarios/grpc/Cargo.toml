@@ -1,0 +1,17 @@
+[package]
+name = "usuarios-grpc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+usuarios-domain = { path = "../domain" }
+usuarios-auth = { path = "../auth" }
+usuarios-application = { path = "../application" }
+
+tokio = { workspace = true }
+tonic = { workspace = true }
+prost = { workspace = true }
+async-trait = { workspace = true }
+
+[build-dependencies]
+tonic-build = { workspace = true }

@@ -20,10 +20,19 @@ tracing-subscriber = { workspace = true }
 tonic = { workspace = true }
 tonic-reflection = { workspace = true }
 
-# Internal crates
+# Internal crates - Salas
 salas-domain = { path = "../features/salas/domain" }
 salas-application = { path = "../features/salas/application" }
 salas-infrastructure = { path = "../features/salas/infrastructure" }
 salas-api = { path = "../features/salas/api" }
 salas-grpc = { path = "../features/salas/grpc" }
+
+# Internal crates - Usuarios
+usuarios-domain = { path = "../features/usuarios/domain" }
+usuarios-auth = { path = "../features/usuarios/auth" }
+usuarios-application = { path = "../features/usuarios/application" }
+usuarios-infrastructure = { path = "../features/usuarios/infrastructure" }
+usuarios-grpc = { path = "../features/usuarios/grpc" }
+
+# Web
 app-web = { path = "../app-web" }
