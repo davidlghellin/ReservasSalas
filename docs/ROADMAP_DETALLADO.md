@@ -361,7 +361,7 @@ data_dir = "./data"
 ```toml
 [dependencies]
 config = "0.14"
-serde = { version = "1.0", features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
 ```
 
 **Tareas:**

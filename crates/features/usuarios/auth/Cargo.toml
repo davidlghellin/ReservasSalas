@@ -8,7 +8,7 @@ usuarios-domain = { path = "../domain" }
 
 # JWT
 jsonwebtoken = "9.3"
-serde = { version = "1.0", features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 # Password hashing
