@@ -7782,22 +7782,17 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 name = "salas-api"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "axum 0.8.7",
  "http",
  "salas-application",
  "salas-domain",
- "salas-infrastructure",
  "serde",
  "serde_json",
- "thiserror 2.0.17",
- "tokio",
  "tracing",
  "usuarios-auth",
  "usuarios-domain",
  "utoipa",
  "utoipa-swagger-ui",
- "uuid",
 ]
 
 [[package]]
@@ -7826,7 +7821,6 @@ dependencies = [
  "prost",
  "salas-application",
  "salas-domain",
- "tokio",
  "tonic",
  "tonic-build",
  "usuarios-auth",
@@ -10165,7 +10159,6 @@ name = "usuarios-application"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "thiserror 1.0.69",
  "tokio",
  "usuarios-auth",
  "usuarios-domain",
@@ -10178,9 +10171,7 @@ dependencies = [
  "argon2",
  "chrono",
  "jsonwebtoken",
- "rand 0.8.5",
  "serde",
- "thiserror 1.0.69",
  "usuarios-domain",
 ]
 
@@ -10200,7 +10191,6 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "prost",
- "tokio",
  "tonic",
  "tonic-build",
  "usuarios-application",

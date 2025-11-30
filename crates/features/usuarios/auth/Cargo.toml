@@ -13,7 +13,3 @@ chrono = { version = "0.4", features = ["serde"] }
 
 # Password hashing
 argon2 = "0.5"
-rand = "0.8"
-
-# Error handling
-thiserror = "1.0"
