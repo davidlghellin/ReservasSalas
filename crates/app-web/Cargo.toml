@@ -12,13 +12,7 @@ tower-http = { workspace = true }
 askama = { workspace = true }
 
 # Internal crates
-salas-domain = { path = "../features/salas/domain" }
 salas-application = { path = "../features/salas/application" }
-salas-infrastructure = { path = "../features/salas/infrastructure" }
-salas-api = { path = "../features/salas/api" }
 
 # Serialización para formularios
 serde = { version = "1.0", features = ["derive"] }
-
-# Manejo de fechas
-chrono = { workspace = true, features = ["serde"] }

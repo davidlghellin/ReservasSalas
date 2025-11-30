@@ -3,24 +3,16 @@ name = "app-desktop-dioxus"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
-dioxus = { version = "0.6", features = ["desktop"] }
-dioxus-logger = "0.5"
-reqwest = { version = "0.12", features = ["json"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tokio = { version = "1", features = ["full"] }
-chrono = "0.4"
-tonic = "0.12"
-prost = "0.12"
-
-# Dependencias locales
-salas-domain = { path = "../features/salas/domain" }
-salas-application = { path = "../features/salas/application" }
-salas-infrastructure = { path = "../features/salas/infrastructure" }
-salas-grpc = { path = "../features/salas/grpc" }
-usuarios-grpc = { path = "../features/usuarios/grpc" }
-
 [[bin]]
 name = "app-desktop-dioxus"
 path = "src/main.rs"
+
+[dependencies]
+dioxus = { version = "0.6", features = ["desktop"] }
+dioxus-logger = "0.5"
+serde = { version = "1.0", features = ["derive"] }
+tonic = "0.12"
+
+# Dependencias locales
+salas-grpc = { path = "../features/salas/grpc" }
+usuarios-grpc = { path = "../features/usuarios/grpc" }
