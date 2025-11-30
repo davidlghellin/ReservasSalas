@@ -2,28 +2,28 @@
 members = [
     "crates/app",
     "crates/app-cli",
-    "crates/app-desktop-tauri/src-tauri",
     "crates/app-desktop-dioxus",
-    "crates/app-desktop-slint",
     "crates/app-desktop-iced",
+    "crates/app-desktop-slint",
+    "crates/app-desktop-tauri/src-tauri",
     "crates/app-tui",
     "crates/app-web",
-    "crates/features/salas/domain",
-    "crates/features/salas/application",
-    "crates/features/salas/infrastructure",
     "crates/features/salas/api",
+    "crates/features/salas/application",
+    "crates/features/salas/domain",
     "crates/features/salas/grpc",
-    "crates/features/usuarios/domain",
-    "crates/features/usuarios/auth",
+    "crates/features/salas/infrastructure",
     "crates/features/usuarios/application",
-    "crates/features/usuarios/infrastructure",
+    "crates/features/usuarios/auth",
+    "crates/features/usuarios/domain",
     "crates/features/usuarios/grpc",
+    "crates/features/usuarios/infrastructure",
 ]
 resolver = "2"
 
 [workspace.dependencies]
 anyhow = "1.0.100"
-argon2 = "0.5"
+argon2 = "0.5.3"
 askama = "0.14.0"
 async-trait = "0.1.89"
 axum = "0.8.7"
