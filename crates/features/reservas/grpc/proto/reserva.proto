@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package reserva;
+
+// Servicio de gestión de reservas
+service ReservaService {
+  // Crear una nueva reserva
+  rpc CrearReserva(CrearReservaRequest) returns (ReservaResponse);
+
+  // Obtener una reserva por ID
+  rpc ObtenerReserva(ObtenerReservaRequest) returns (ReservaResponse);
+
+  // Listar todas las reservas
+  rpc ListarReservas(ListarReservasRequest) returns (ListarReservasResponse);
+
+  // Listar reservas por sala
+  rpc ListarReservasPorSala(ListarReservasPorSalaRequest) returns (ListarReservasResponse);
+
+  // Listar reservas por usuario
+  rpc ListarReservasPorUsuario(ListarReservasPorUsuarioRequest) returns (ListarReservasResponse);
+
+  // Cancelar una reserva
+  rpc CancelarReserva(CancelarReservaRequest) returns (ReservaResponse);
+
+  // Completar una reserva
+  rpc CompletarReserva(CompletarReservaRequest) returns (ReservaResponse);
+
+  // Verificar disponibilidad de una sala
+  rpc VerificarDisponibilidad(VerificarDisponibilidadRequest) returns (VerificarDisponibilidadResponse);
+}
+
+// ========== Mensajes de Request ==========
+
+message CrearReservaRequest {
+  string sala_id = 1;
+  string usuario_id = 2;
+  string fecha_inicio = 3; // ISO 8601 format (RFC3339)
+  string fecha_fin = 4;     // ISO 8601 format (RFC3339)
+}
+
+message ObtenerReservaRequest {
+  string id = 1;
+}
+
+message ListarReservasRequest {}
+
+message ListarReservasPorSalaRequest {
+  string sala_id = 1;
+}
+
+message ListarReservasPorUsuarioRequest {
+  string usuario_id = 1;
+}
+
+message CancelarReservaRequest {
+  string id = 1;
+}
+
+message CompletarReservaRequest {
+  string id = 1;
+}
+
+message VerificarDisponibilidadRequest {
+  string sala_id = 1;
+  string fecha_inicio = 2; // ISO 8601 format (RFC3339)
+  string fecha_fin = 3;     // ISO 8601 format (RFC3339)
+}
+
+// ========== Mensajes de Response ==========
+
+message ReservaResponse {
+  Reserva reserva = 1;
+}
+
+message ListarReservasResponse {
+  repeated Reserva reservas = 1;
+}
+
+message VerificarDisponibilidadResponse {
+  bool disponible = 1;
+  string mensaje = 2;
+}
+
+// ========== Mensajes de Datos ==========
+
+message Reserva {
+  string id = 1;
+  string sala_id = 2;
+  string usuario_id = 3;
+  string fecha_inicio = 4; // ISO 8601 format (RFC3339)
+  string fecha_fin = 5;     // ISO 8601 format (RFC3339)
+  EstadoReserva estado = 6;
+  string created_at = 7;    // ISO 8601 format (RFC3339)
+}
+
+enum EstadoReserva {
+  ACTIVA = 0;
+  CANCELADA = 1;
+  COMPLETADA = 2;
+}
