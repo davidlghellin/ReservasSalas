@@ -1,6 +1,5 @@
 use axum::http::Method;
 use axum::Router;
-use salas_api::routes::salas_routes;
 use salas_application::SalaServiceImpl;
 use salas_grpc::SalaGrpcServer;
 use salas_infrastructure::FileSalaRepository;
@@ -95,7 +94,12 @@ async fn main() {
         .allow_origin(Any);
 
     // Crear routers HTTP
-    let api_router = salas_routes(Arc::clone(&sala_service));
+    // Opción 1: Rutas SIN autenticación (para desarrollo/testing)
+    // let api_router = salas_api::routes::salas_routes(Arc::clone(&sala_service));
+    
+    // Opción 2: Rutas CON autenticación (para producción)
+    let api_router = salas_api::routes::salas_routes_with_auth(Arc::clone(&sala_service));
+    
     let web_router = app_web::crear_router_web(Arc::clone(&sala_service));
 
     // Combinar routers HTTP
