@@ -10,7 +10,9 @@ use tonic::transport::Server;
 use tower_http::cors::{Any, CorsLayer};
 
 // Usuarios
-use usuarios_application::{AuthService, AuthServiceImpl, UsuarioRepository, UsuarioService, UsuarioServiceImpl};
+use usuarios_application::{
+    AuthService, AuthServiceImpl, UsuarioRepository, UsuarioService, UsuarioServiceImpl,
+};
 use usuarios_domain::Rol;
 use usuarios_grpc::UsuarioGrpcServer;
 use usuarios_infrastructure::FileUsuarioRepository;
@@ -34,10 +36,13 @@ async fn main() {
     tracing::info!("📦 Inicializando sistema de Salas...");
 
     // Crear el repositorio de archivo JSON
-    let salas_repository: FileSalaRepository = FileSalaRepository::new(PathBuf::from("./data/salas.json"));
+    let salas_repository: FileSalaRepository =
+        FileSalaRepository::new(PathBuf::from("./data/salas.json"));
 
     // Inicializar (cargar datos existentes del archivo)
-    salas_repository.init().await
+    salas_repository
+        .init()
+        .await
         .expect("Error al inicializar repositorio de salas");
 
     tracing::info!("✓ Repositorio de salas inicializado (./data/salas.json)");
@@ -55,32 +60,41 @@ async fn main() {
     let usuarios_repository = FileUsuarioRepository::new(PathBuf::from("./data/usuarios.json"));
 
     // Inicializar (cargar datos existentes)
-    usuarios_repository.init().await
+    usuarios_repository
+        .init()
+        .await
         .expect("Error al inicializar repositorio de usuarios");
 
     tracing::info!("✓ Repositorio de usuarios inicializado (./data/usuarios.json)");
 
     // Crear servicios de usuarios
     let usuarios_repo_arc = Arc::new(usuarios_repository);
-    let auth_service: Arc<dyn AuthService + Send + Sync> = Arc::new(AuthServiceImpl::new(usuarios_repo_arc.clone()));
-    let usuario_service: Arc<dyn UsuarioService + Send + Sync> = Arc::new(UsuarioServiceImpl::new(usuarios_repo_arc.clone()));
+    let auth_service: Arc<dyn AuthService + Send + Sync> =
+        Arc::new(AuthServiceImpl::new(usuarios_repo_arc.clone()));
+    let usuario_service: Arc<dyn UsuarioService + Send + Sync> =
+        Arc::new(UsuarioServiceImpl::new(usuarios_repo_arc.clone()));
 
     // Crear usuario admin inicial si no existen usuarios
     if usuarios_repo_arc.listar().await.unwrap().is_empty() {
         tracing::info!("🔧 Creando usuario admin inicial...");
 
-        match auth_service.register(
-            "Administrador".to_string(),
-            "admin@reservas.com".to_string(),
-            "admin123".to_string(),
-            Some(Rol::Admin),
-        ).await {
+        match auth_service
+            .register(
+                "Administrador".to_string(),
+                "admin@reservas.com".to_string(),
+                "admin123".to_string(),
+                Some(Rol::Admin),
+            )
+            .await
+        {
             Ok(admin_response) => {
                 tracing::info!("✅ Usuario admin creado exitosamente:");
                 tracing::info!("   📧 Email: {}", admin_response.usuario.email);
                 tracing::info!("   👤 Nombre: {}", admin_response.usuario.nombre);
                 tracing::info!("   🎫 Token: {}", admin_response.token);
-                tracing::warn!("⚠️  IMPORTANTE: Cambia la contraseña del admin ('admin123') en producción");
+                tracing::warn!(
+                    "⚠️  IMPORTANTE: Cambia la contraseña del admin ('admin123') en producción"
+                );
             }
             Err(e) => {
                 tracing::error!("❌ Error al crear admin: {:?}", e);
@@ -100,25 +114,32 @@ async fn main() {
     let reservas_repository = FileReservaRepository::new(PathBuf::from("./data/reservas.json"));
 
     // Inicializar (cargar datos existentes)
-    reservas_repository.init().await
+    reservas_repository
+        .init()
+        .await
         .expect("Error al inicializar repositorio de reservas");
 
     tracing::info!("✓ Repositorio de reservas inicializado (./data/reservas.json)");
 
     // Crear repositorios adicionales para el servicio de reservas
     let salas_repo_for_reservas = FileSalaRepository::new(PathBuf::from("./data/salas.json"));
-    salas_repo_for_reservas.init().await
+    salas_repo_for_reservas
+        .init()
+        .await
         .expect("Error al inicializar repositorio de salas para reservas");
 
-    let usuarios_repo_for_reservas = FileUsuarioRepository::new(PathBuf::from("./data/usuarios.json"));
-    usuarios_repo_for_reservas.init().await
+    let usuarios_repo_for_reservas =
+        FileUsuarioRepository::new(PathBuf::from("./data/usuarios.json"));
+    usuarios_repo_for_reservas
+        .init()
+        .await
         .expect("Error al inicializar repositorio de usuarios para reservas");
 
     // Crear servicio de reservas con validación de Sala y Usuario
     let reserva_service_impl = ReservaServiceImpl::new(
         reservas_repository,
         salas_repo_for_reservas,
-        usuarios_repo_for_reservas
+        usuarios_repo_for_reservas,
     );
 
     tracing::info!("✓ Servicio de reservas inicializado");
@@ -131,10 +152,10 @@ async fn main() {
     // Crear routers HTTP
     // Opción 1: Rutas SIN autenticación (para desarrollo/testing)
     // let api_router = salas_api::routes::salas_routes(Arc::clone(&sala_service));
-    
+
     // Opción 2: Rutas CON autenticación (para producción)
     let api_router = salas_api::routes::salas_routes_with_auth(Arc::clone(&sala_service));
-    
+
     let web_router = app_web::crear_router_web(Arc::clone(&sala_service));
 
     // Combinar routers HTTP
@@ -153,9 +174,11 @@ async fn main() {
     // Configurar servidores gRPC
     let grpc_addr = SocketAddr::from(([0, 0, 0, 0], 50051));
     let sala_grpc_server = SalaGrpcServer::new(Arc::clone(&sala_service));
-    let usuario_grpc_server = UsuarioGrpcServer::new(Arc::clone(&auth_service), Arc::clone(&usuario_service));
+    let usuario_grpc_server =
+        UsuarioGrpcServer::new(Arc::clone(&auth_service), Arc::clone(&usuario_service));
     use reservas_grpc::proto::reserva_service_server::ReservaServiceServer;
-    let reserva_grpc_server = ReservaServiceServer::new(ReservaGrpcServer::new(reserva_service_impl));
+    let reserva_grpc_server =
+        ReservaServiceServer::new(ReservaGrpcServer::new(reserva_service_impl));
 
     // Configurar reflexión para grpcurl (incluye todos los servicios)
     let reflection_service = tonic_reflection::server::Builder::configure()

@@ -204,9 +204,7 @@ impl<R: ReservaRepository, S: SalaRepository, U: UsuarioRepository> ReservaServi
         );
 
         // Verificar si hay solapamiento con alguna reserva existente
-        let hay_conflicto = reservas
-            .iter()
-            .any(|r| reserva_temporal.se_solapa_con(r));
+        let hay_conflicto = reservas.iter().any(|r| reserva_temporal.se_solapa_con(r));
 
         Ok(!hay_conflicto)
     }
@@ -241,7 +239,10 @@ mod tests {
             Ok(())
         }
 
-        async fn obtener(&self, _id: &str) -> Result<Option<salas_domain::Sala>, salas_domain::SalaError> {
+        async fn obtener(
+            &self,
+            _id: &str,
+        ) -> Result<Option<salas_domain::Sala>, salas_domain::SalaError> {
             // Siempre devuelve una sala válida para los tests
             Ok(Some(
                 salas_domain::Sala::new("sala1".to_string(), "Sala Test".to_string(), 10).unwrap(),
@@ -252,20 +253,29 @@ mod tests {
             Ok(vec![])
         }
 
-        async fn actualizar(&self, _sala: &salas_domain::Sala) -> Result<(), salas_domain::SalaError> {
+        async fn actualizar(
+            &self,
+            _sala: &salas_domain::Sala,
+        ) -> Result<(), salas_domain::SalaError> {
             Ok(())
         }
     }
 
     #[async_trait]
     impl usuarios_application::UsuarioRepository for MockUsuarioRepository {
-        async fn guardar(&self, _usuario: &usuarios_domain::Usuario) -> Result<(), usuarios_domain::UsuarioError> {
+        async fn guardar(
+            &self,
+            _usuario: &usuarios_domain::Usuario,
+        ) -> Result<(), usuarios_domain::UsuarioError> {
             Ok(())
         }
 
-        async fn obtener(&self, _id: &str) -> Result<Option<usuarios_domain::Usuario>, usuarios_domain::UsuarioError> {
+        async fn obtener(
+            &self,
+            _id: &str,
+        ) -> Result<Option<usuarios_domain::Usuario>, usuarios_domain::UsuarioError> {
             // Siempre devuelve un usuario válido para los tests
-            use usuarios_domain::{Usuario, Rol};
+            use usuarios_domain::{Rol, Usuario};
             let now = chrono::Utc::now();
             Ok(Some(Usuario::with_id(
                 "usuario1".to_string(),
@@ -279,15 +289,23 @@ mod tests {
             )?))
         }
 
-        async fn obtener_por_email(&self, _email: &str) -> Result<Option<usuarios_domain::Usuario>, usuarios_domain::UsuarioError> {
+        async fn obtener_por_email(
+            &self,
+            _email: &str,
+        ) -> Result<Option<usuarios_domain::Usuario>, usuarios_domain::UsuarioError> {
             Ok(None)
         }
 
-        async fn listar(&self) -> Result<Vec<usuarios_domain::Usuario>, usuarios_domain::UsuarioError> {
+        async fn listar(
+            &self,
+        ) -> Result<Vec<usuarios_domain::Usuario>, usuarios_domain::UsuarioError> {
             Ok(vec![])
         }
 
-        async fn actualizar(&self, _usuario: &usuarios_domain::Usuario) -> Result<(), usuarios_domain::UsuarioError> {
+        async fn actualizar(
+            &self,
+            _usuario: &usuarios_domain::Usuario,
+        ) -> Result<(), usuarios_domain::UsuarioError> {
             Ok(())
         }
 
@@ -327,10 +345,7 @@ mod tests {
                 .collect())
         }
 
-        async fn listar_por_usuario(
-            &self,
-            usuario_id: &str,
-        ) -> Result<Vec<Reserva>, ReservaError> {
+        async fn listar_por_usuario(&self, usuario_id: &str) -> Result<Vec<Reserva>, ReservaError> {
             let reservas = self.reservas.lock().unwrap();
             Ok(reservas
                 .values()
@@ -424,9 +439,7 @@ mod tests {
         assert!(resultado.is_err());
         match resultado.unwrap_err() {
             ReservaError::Validacion(msgs) => {
-                assert!(msgs
-                    .iter()
-                    .any(|m| m.contains("no está disponible")));
+                assert!(msgs.iter().any(|m| m.contains("no está disponible")));
             }
             _ => panic!("Se esperaba error de validación"),
         }
@@ -645,7 +658,11 @@ mod tests {
 
         // Verificar disponibilidad en horario ocupado
         let disponible = service
-            .verificar_disponibilidad("sala1", inicio1 + Duration::hours(1), fin1 + Duration::hours(1))
+            .verificar_disponibilidad(
+                "sala1",
+                inicio1 + Duration::hours(1),
+                fin1 + Duration::hours(1),
+            )
             .await
             .unwrap();
         assert!(!disponible);

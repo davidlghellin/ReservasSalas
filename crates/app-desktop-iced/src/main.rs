@@ -16,8 +16,7 @@ use usuarios_grpc::proto::{LoginRequest, LoginResponse};
 
 use reservas_grpc::proto::reserva_service_client::ReservaServiceClient;
 use reservas_grpc::proto::{
-    CrearReservaRequest, ListarReservasRequest, Reserva as ProtoReserva,
-    CancelarReservaRequest,
+    CancelarReservaRequest, CrearReservaRequest, ListarReservasRequest, Reserva as ProtoReserva,
 };
 
 use chrono::{Duration as ChronoDuration, Local};
@@ -175,7 +174,13 @@ impl App {
                 Task::none()
             }
             Message::Login => {
-                if let AppState::Login { email, password, loading, error } = &mut self.state {
+                if let AppState::Login {
+                    email,
+                    password,
+                    loading,
+                    error,
+                } = &mut self.state
+                {
                     if email.is_empty() || password.is_empty() {
                         *error = "Email y contraseña son requeridos".to_string();
                         return Task::none();
@@ -184,11 +189,9 @@ impl App {
                     *error = String::new();
                     let email = email.clone();
                     let password = password.clone();
-                    Task::perform(login_usuario(email, password), |result| {
-                        match result {
-                            Ok((token, usuario)) => Message::LoginExitoso(token, usuario),
-                            Err(e) => Message::LoginError(e),
-                        }
+                    Task::perform(login_usuario(email, password), |result| match result {
+                        Ok((token, usuario)) => Message::LoginExitoso(token, usuario),
+                        Err(e) => Message::LoginError(e),
                     })
                 } else {
                     Task::none()
@@ -230,7 +233,10 @@ impl App {
             }
             Message::LoginError(error) => {
                 let error_clone = error.clone();
-                if let AppState::Login { error: e, loading, .. } = &mut self.state {
+                if let AppState::Login {
+                    error: e, loading, ..
+                } = &mut self.state
+                {
                     *e = error;
                     *loading = false;
                 }
@@ -256,21 +262,34 @@ impl App {
 
             // Mensajes de salas (solo si está autenticado)
             Message::SalasCargadas(Ok(salas)) => {
-                if let AppState::Authenticated { salas: s, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    salas: s, loading, ..
+                } = &mut self.state
+                {
                     *s = salas;
                     *loading = false;
                 }
                 Task::none()
             }
             Message::SalasCargadas(Err(e)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = format!("❌ Error al cargar salas: {}", e);
                     *loading = false;
                 }
                 Task::none()
             }
             Message::SalaCreada(Ok(_)) => {
-                if let AppState::Authenticated { nuevo_nombre, nueva_capacidad, mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    nuevo_nombre,
+                    nueva_capacidad,
+                    mensaje,
+                    loading,
+                    ..
+                } = &mut self.state
+                {
                     let nombre = nuevo_nombre.clone();
                     *mensaje = format!("✅ Sala '{}' creada correctamente", nombre);
                     mostrar_notificacion(
@@ -285,7 +304,10 @@ impl App {
                 Task::perform(listar_salas(), Message::SalasCargadas)
             }
             Message::SalaCreada(Err(e)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = format!("❌ Error al crear sala: {}", e);
                     *loading = false;
                 }
@@ -293,7 +315,10 @@ impl App {
                 Task::none()
             }
             Message::SalaActivada(Ok(_)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = "✅ Sala activada correctamente".to_string();
                     *loading = false;
                 }
@@ -305,7 +330,10 @@ impl App {
                 Task::perform(listar_salas(), Message::SalasCargadas)
             }
             Message::SalaActivada(Err(e)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = format!("❌ Error al activar sala: {}", e);
                     *loading = false;
                 }
@@ -313,7 +341,10 @@ impl App {
                 Task::none()
             }
             Message::SalaDesactivada(Ok(_)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = "✅ Sala desactivada correctamente".to_string();
                     *loading = false;
                 }
@@ -325,7 +356,10 @@ impl App {
                 Task::perform(listar_salas(), Message::SalasCargadas)
             }
             Message::SalaDesactivada(Err(e)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = format!("❌ Error al desactivar sala: {}", e);
                     *loading = false;
                 }
@@ -339,13 +373,23 @@ impl App {
                 Task::none()
             }
             Message::CapacidadChanged(capacidad) => {
-                if let AppState::Authenticated { nueva_capacidad, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    nueva_capacidad, ..
+                } = &mut self.state
+                {
                     *nueva_capacidad = capacidad;
                 }
                 Task::none()
             }
             Message::CrearSala => {
-                if let AppState::Authenticated { nuevo_nombre, nueva_capacidad, mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    nuevo_nombre,
+                    nueva_capacidad,
+                    mensaje,
+                    loading,
+                    ..
+                } = &mut self.state
+                {
                     if nuevo_nombre.is_empty() {
                         *mensaje = "❌ El nombre no puede estar vacío".to_string();
                         return Task::none();
@@ -380,7 +424,10 @@ impl App {
                 Task::perform(desactivar_sala(id), Message::SalaDesactivada)
             }
             Message::ActualizarSalas => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *loading = true;
                     mensaje.clear();
                 }
@@ -389,7 +436,12 @@ impl App {
 
             // Mensajes de navegación
             Message::CambiarTab(tab) => {
-                if let AppState::Authenticated { tab_actual, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    tab_actual,
+                    loading,
+                    ..
+                } = &mut self.state
+                {
                     *tab_actual = tab;
                     *loading = true;
                 }
@@ -407,21 +459,35 @@ impl App {
 
             // Mensajes de reservas
             Message::ReservasCargadas(Ok(reservas)) => {
-                if let AppState::Authenticated { reservas: r, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    reservas: r,
+                    loading,
+                    ..
+                } = &mut self.state
+                {
                     *r = reservas;
                     *loading = false;
                 }
                 Task::none()
             }
             Message::ReservasCargadas(Err(e)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = format!("❌ Error al cargar reservas: {}", e);
                     *loading = false;
                 }
                 Task::none()
             }
             Message::ReservaCreada(Ok(_)) => {
-                if let AppState::Authenticated { mensaje, loading, sala_seleccionada, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje,
+                    loading,
+                    sala_seleccionada,
+                    ..
+                } = &mut self.state
+                {
                     *mensaje = "✅ Reserva creada correctamente".to_string();
                     mostrar_notificacion(
                         "✅ Reserva creada",
@@ -434,7 +500,10 @@ impl App {
                 Task::perform(listar_reservas(), Message::ReservasCargadas)
             }
             Message::ReservaCreada(Err(e)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = format!("❌ Error al crear reserva: {}", e);
                     *loading = false;
                 }
@@ -442,7 +511,10 @@ impl App {
                 Task::none()
             }
             Message::ReservaCancelada(Ok(_)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = "✅ Reserva cancelada correctamente".to_string();
                     *loading = false;
                 }
@@ -454,7 +526,10 @@ impl App {
                 Task::perform(listar_reservas(), Message::ReservasCargadas)
             }
             Message::ReservaCancelada(Err(e)) => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *mensaje = format!("❌ Error al cancelar reserva: {}", e);
                     *loading = false;
                 }
@@ -478,7 +553,10 @@ impl App {
                 Task::none()
             }
             Message::SalaSeleccionadaChanged(sala_id) => {
-                if let AppState::Authenticated { sala_seleccionada, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    sala_seleccionada, ..
+                } = &mut self.state
+                {
                     *sala_seleccionada = sala_id;
                 }
                 Task::none()
@@ -497,8 +575,15 @@ impl App {
             }
             Message::CrearReserva => {
                 if let AppState::Authenticated {
-                    usuario, sala_seleccionada, fecha_inicio, fecha_fin, mensaje, loading, ..
-                } = &mut self.state {
+                    usuario,
+                    sala_seleccionada,
+                    fecha_inicio,
+                    fecha_fin,
+                    mensaje,
+                    loading,
+                    ..
+                } = &mut self.state
+                {
                     if sala_seleccionada.is_empty() {
                         *mensaje = "❌ Debes seleccionar una sala".to_string();
                         return Task::none();
@@ -514,7 +599,7 @@ impl App {
 
                     Task::perform(
                         crear_reserva(sala_id, usuario_id, inicio, fin),
-                        Message::ReservaCreada
+                        Message::ReservaCreada,
                     )
                 } else {
                     Task::none()
@@ -527,7 +612,10 @@ impl App {
                 Task::perform(cancelar_reserva(id), Message::ReservaCancelada)
             }
             Message::ActualizarReservas => {
-                if let AppState::Authenticated { mensaje, loading, .. } = &mut self.state {
+                if let AppState::Authenticated {
+                    mensaje, loading, ..
+                } = &mut self.state
+                {
                     *loading = true;
                     mensaje.clear();
                 }
@@ -538,16 +626,47 @@ impl App {
 
     fn view(&self) -> Element<'_, Message> {
         match &self.state {
-            AppState::Login { email, password, error, loading } => {
-                self.view_login(email, password, error, *loading)
-            }
-            AppState::Authenticated { usuario, tab_actual, salas, nuevo_nombre, nueva_capacidad, reservas, sala_seleccionada, fecha_inicio, fecha_fin, mensaje, loading } => {
-                self.view_main(usuario, *tab_actual, salas, nuevo_nombre, nueva_capacidad, reservas, sala_seleccionada, fecha_inicio, fecha_fin, mensaje, *loading)
-            }
+            AppState::Login {
+                email,
+                password,
+                error,
+                loading,
+            } => self.view_login(email, password, error, *loading),
+            AppState::Authenticated {
+                usuario,
+                tab_actual,
+                salas,
+                nuevo_nombre,
+                nueva_capacidad,
+                reservas,
+                sala_seleccionada,
+                fecha_inicio,
+                fecha_fin,
+                mensaje,
+                loading,
+            } => self.view_main(
+                usuario,
+                *tab_actual,
+                salas,
+                nuevo_nombre,
+                nueva_capacidad,
+                reservas,
+                sala_seleccionada,
+                fecha_inicio,
+                fecha_fin,
+                mensaje,
+                *loading,
+            ),
         }
     }
 
-    fn view_login<'a>(&'a self, email: &'a str, password: &'a str, error: &'a str, loading: bool) -> Element<'a, Message> {
+    fn view_login<'a>(
+        &'a self,
+        email: &'a str,
+        password: &'a str,
+        error: &'a str,
+        loading: bool,
+    ) -> Element<'a, Message> {
         let title = column![
             text("🔐 Iniciar Sesión")
                 .size(36)
@@ -562,13 +681,7 @@ impl App {
         .padding(30);
 
         let error_message = if !error.is_empty() {
-            container(
-                text(error)
-                    .size(14)
-                    .width(Length::Fill)
-                    .center()
-            )
-            .padding(10)
+            container(text(error).size(14).width(Length::Fill).center()).padding(10)
         } else {
             container(text(""))
         };
@@ -584,22 +697,22 @@ impl App {
                 .on_input(Message::PasswordChanged)
                 .padding(10)
                 .width(Length::Fill),
-            button(text(if loading { "⏳ Iniciando sesión..." } else { "🚀 Iniciar Sesión" }))
-                .on_press_maybe(if !loading { Some(Message::Login) } else { None })
-                .padding(15)
-                .width(Length::Fill),
+            button(text(if loading {
+                "⏳ Iniciando sesión..."
+            } else {
+                "🚀 Iniciar Sesión"
+            }))
+            .on_press_maybe(if !loading { Some(Message::Login) } else { None })
+            .padding(15)
+            .width(Length::Fill),
         ]
         .spacing(15)
         .padding(40)
         .max_width(400);
 
-        let content = column![
-            title,
-            error_message,
-            form,
-        ]
-        .spacing(20)
-        .align_x(Alignment::Center);
+        let content = column![title, error_message, form,]
+            .spacing(20)
+            .align_x(Alignment::Center);
 
         container(content)
             .width(Length::Fill)
@@ -609,49 +722,66 @@ impl App {
             .into()
     }
 
-    fn view_main<'a>(&'a self, usuario: &'a UsuarioInfo, tab_actual: Tab, salas: &'a Vec<SalaDto>, nuevo_nombre: &'a str, nueva_capacidad: &'a str, reservas: &'a Vec<ProtoReserva>, sala_seleccionada: &'a str, fecha_inicio: &'a str, fecha_fin: &'a str, mensaje: &'a str, loading: bool) -> Element<'a, Message> {
-        let header = column![
-            row![
-                column![
-                    text("🏢 Gestión de Salas")
-                        .size(32)
-                        .width(Length::Fill),
-                    text("Sistema de reservas - Iced UI (gRPC)")
-                        .size(16)
-                        .width(Length::Fill),
-                ]
-                .width(Length::Fill),
-                column![
-                    text(format!("👤 {}", usuario.nombre))
-                        .size(16)
-                        .align_x(Alignment::End),
-                    text(format!("📧 {}", usuario.email))
-                        .size(14)
-                        .align_x(Alignment::End),
-                    text(format!("🎫 {}", usuario.rol))
-                        .size(14)
-                        .align_x(Alignment::End),
-                    button(text("🚪 Salir"))
-                        .on_press(Message::Logout)
-                        .padding(8),
-                ]
-                .spacing(5)
-                .align_x(Alignment::End),
+    fn view_main<'a>(
+        &'a self,
+        usuario: &'a UsuarioInfo,
+        tab_actual: Tab,
+        salas: &'a Vec<SalaDto>,
+        nuevo_nombre: &'a str,
+        nueva_capacidad: &'a str,
+        reservas: &'a Vec<ProtoReserva>,
+        sala_seleccionada: &'a str,
+        fecha_inicio: &'a str,
+        fecha_fin: &'a str,
+        mensaje: &'a str,
+        loading: bool,
+    ) -> Element<'a, Message> {
+        let header = column![row![
+            column![
+                text("🏢 Gestión de Salas").size(32).width(Length::Fill),
+                text("Sistema de reservas - Iced UI (gRPC)")
+                    .size(16)
+                    .width(Length::Fill),
             ]
-            .spacing(20)
-            .align_y(Alignment::Center),
+            .width(Length::Fill),
+            column![
+                text(format!("👤 {}", usuario.nombre))
+                    .size(16)
+                    .align_x(Alignment::End),
+                text(format!("📧 {}", usuario.email))
+                    .size(14)
+                    .align_x(Alignment::End),
+                text(format!("🎫 {}", usuario.rol))
+                    .size(14)
+                    .align_x(Alignment::End),
+                button(text("🚪 Salir"))
+                    .on_press(Message::Logout)
+                    .padding(8),
+            ]
+            .spacing(5)
+            .align_x(Alignment::End),
         ]
+        .spacing(20)
+        .align_y(Alignment::Center),]
         .spacing(5)
         .padding(20);
 
         // Tabs de navegación
         let tabs = row![
-            button(text(if tab_actual == Tab::Salas { "🏢 Salas ✓" } else { "🏢 Salas" }))
-                .on_press(Message::CambiarTab(Tab::Salas))
-                .padding(15),
-            button(text(if tab_actual == Tab::Reservas { "📅 Reservas ✓" } else { "📅 Reservas" }))
-                .on_press(Message::CambiarTab(Tab::Reservas))
-                .padding(15),
+            button(text(if tab_actual == Tab::Salas {
+                "🏢 Salas ✓"
+            } else {
+                "🏢 Salas"
+            }))
+            .on_press(Message::CambiarTab(Tab::Salas))
+            .padding(15),
+            button(text(if tab_actual == Tab::Reservas {
+                "📅 Reservas ✓"
+            } else {
+                "📅 Reservas"
+            }))
+            .on_press(Message::CambiarTab(Tab::Reservas))
+            .padding(15),
         ]
         .spacing(10)
         .padding(10);
@@ -677,7 +807,14 @@ impl App {
         // Contenido según el tab actual
         let contenido = match tab_actual {
             Tab::Salas => self.view_salas_tab(salas, nuevo_nombre, nueva_capacidad, loading),
-            Tab::Reservas => self.view_reservas_tab(reservas, salas, sala_seleccionada, fecha_inicio, fecha_fin, loading),
+            Tab::Reservas => self.view_reservas_tab(
+                reservas,
+                salas,
+                sala_seleccionada,
+                fecha_inicio,
+                fecha_fin,
+                loading,
+            ),
         };
 
         let content = column![header, tabs, banner, mensaje_view, contenido]
@@ -692,7 +829,13 @@ impl App {
             .into()
     }
 
-    fn view_salas_tab<'a>(&'a self, salas: &'a Vec<SalaDto>, nuevo_nombre: &'a str, nueva_capacidad: &'a str, loading: bool) -> Element<'a, Message> {
+    fn view_salas_tab<'a>(
+        &'a self,
+        salas: &'a Vec<SalaDto>,
+        nuevo_nombre: &'a str,
+        nueva_capacidad: &'a str,
+        loading: bool,
+    ) -> Element<'a, Message> {
         let form = column![
             text("➕ Nueva Sala").size(20),
             row![
@@ -812,7 +955,15 @@ impl App {
             .into()
     }
 
-    fn view_reservas_tab<'a>(&'a self, reservas: &'a Vec<ProtoReserva>, salas: &'a Vec<SalaDto>, sala_seleccionada: &'a str, fecha_inicio: &'a str, fecha_fin: &'a str, loading: bool) -> Element<'a, Message> {
+    fn view_reservas_tab<'a>(
+        &'a self,
+        reservas: &'a Vec<ProtoReserva>,
+        salas: &'a Vec<SalaDto>,
+        sala_seleccionada: &'a str,
+        fecha_inicio: &'a str,
+        fecha_fin: &'a str,
+        loading: bool,
+    ) -> Element<'a, Message> {
         // Formulario para crear reserva
         let form = column![
             text("➕ Nueva Reserva").size(20),
@@ -827,7 +978,11 @@ impl App {
                                 .map(|sala| {
                                     button(text(format!(
                                         "{} {}",
-                                        if sala_seleccionada == &sala.id { "✓" } else { "○" },
+                                        if sala_seleccionada == &sala.id {
+                                            "✓"
+                                        } else {
+                                            "○"
+                                        },
                                         sala.nombre
                                     )))
                                     .on_press(Message::SalaSeleccionadaChanged(sala.id.clone()))
@@ -911,17 +1066,14 @@ impl App {
                             .unwrap_or_else(|| "Sala desconocida".to_string());
 
                         // Formatear las fechas
-                        let fecha_inicio_formatted = reserva.fecha_inicio
-                            .split('T')
-                            .collect::<Vec<_>>();
-                        let fecha_fin_formatted = reserva.fecha_fin
-                            .split('T')
-                            .collect::<Vec<_>>();
+                        let fecha_inicio_formatted =
+                            reserva.fecha_inicio.split('T').collect::<Vec<_>>();
+                        let fecha_fin_formatted = reserva.fecha_fin.split('T').collect::<Vec<_>>();
 
                         let estado_emoji = match reserva.estado {
-                            0 => "✅",  // Activa
-                            1 => "❌",  // Cancelada
-                            2 => "✔️",  // Completada
+                            0 => "✅", // Activa
+                            1 => "❌", // Cancelada
+                            2 => "✔️", // Completada
                             _ => "❓",
                         };
 
@@ -1007,9 +1159,9 @@ fn mostrar_notificacion(titulo: &str, mensaje: &str, tipo: TipoNotificacion) {
 
         // Sonido según el tipo de notificación
         let sound = match tipo {
-            TipoNotificacion::Exito => "Glass",      // Sonido de éxito
-            TipoNotificacion::Error => "Basso",      // Sonido de error
-            TipoNotificacion::Info => "default",     // Sonido por defecto
+            TipoNotificacion::Exito => "Glass",  // Sonido de éxito
+            TipoNotificacion::Error => "Basso",  // Sonido de error
+            TipoNotificacion::Info => "default", // Sonido por defecto
         };
 
         // Intentar con terminal-notifier primero (más bonito en macOS)
@@ -1179,16 +1331,17 @@ fn add_auth_token<T>(request: &mut Request<T>, token: &str) -> Result<(), String
 async fn login_usuario(email: String, password: String) -> Result<(String, UsuarioInfo), String> {
     let mut client = get_usuario_client().await?;
 
-    let request: Request<LoginRequest> = Request::new(LoginRequest {
-        email,
-        password,
-    });
+    let request: Request<LoginRequest> = Request::new(LoginRequest { email, password });
 
-    let response = client.login(request).await
+    let response = client
+        .login(request)
+        .await
         .map_err(|e| format!("Error al hacer login: {}", e))?;
 
     let login_response: LoginResponse = response.into_inner();
-    let usuario = login_response.usuario.ok_or_else(|| "Respuesta de login sin usuario".to_string())?;
+    let usuario = login_response
+        .usuario
+        .ok_or_else(|| "Respuesta de login sin usuario".to_string())?;
 
     let usuario_info = UsuarioInfo {
         id: usuario.id,
@@ -1208,8 +1361,7 @@ async fn listar_salas() -> Result<Vec<SalaDto>, String> {
 
         // Agregar token JWT si existe
         if let Some(token) = get_jwt_token().await {
-            add_auth_token(&mut request, &token)
-                .map_err(|e| tonic::Status::internal(e))?;
+            add_auth_token(&mut request, &token).map_err(|e| tonic::Status::internal(e))?;
         }
 
         client.listar_salas(request).await
@@ -1228,8 +1380,7 @@ async fn crear_sala(nombre: String, capacidad: u32) -> Result<SalaDto, String> {
 
             // Agregar token JWT si existe
             if let Some(token) = get_jwt_token().await {
-                add_auth_token(&mut request, &token)
-                    .map_err(|e| tonic::Status::internal(e))?;
+                add_auth_token(&mut request, &token).map_err(|e| tonic::Status::internal(e))?;
             }
 
             client.crear_sala(request).await
@@ -1248,8 +1399,7 @@ async fn activar_sala(id: String) -> Result<SalaDto, String> {
 
             // Agregar token JWT si existe
             if let Some(token) = get_jwt_token().await {
-                add_auth_token(&mut request, &token)
-                    .map_err(|e| tonic::Status::internal(e))?;
+                add_auth_token(&mut request, &token).map_err(|e| tonic::Status::internal(e))?;
             }
 
             client.activar_sala(request).await
@@ -1269,8 +1419,7 @@ async fn desactivar_sala(id: String) -> Result<SalaDto, String> {
 
             // Agregar token JWT si existe
             if let Some(token) = get_jwt_token().await {
-                add_auth_token(&mut request, &token)
-                    .map_err(|e| tonic::Status::internal(e))?;
+                add_auth_token(&mut request, &token).map_err(|e| tonic::Status::internal(e))?;
             }
 
             client.desactivar_sala(request).await
@@ -1315,13 +1464,20 @@ async fn listar_reservas() -> Result<Vec<ProtoReserva>, String> {
             .map_err(|e| format!("Error al agregar token: {}", e))?;
     }
 
-    let response = client.listar_reservas(request).await
+    let response = client
+        .listar_reservas(request)
+        .await
         .map_err(|e| format!("Error al listar reservas: {}", e))?;
 
     Ok(response.into_inner().reservas)
 }
 
-async fn crear_reserva(sala_id: String, usuario_id: String, fecha_inicio: String, fecha_fin: String) -> Result<ProtoReserva, String> {
+async fn crear_reserva(
+    sala_id: String,
+    usuario_id: String,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<ProtoReserva, String> {
     let mut client = get_reserva_client().await?;
 
     // Convertir fechas al formato RFC3339
@@ -1341,10 +1497,14 @@ async fn crear_reserva(sala_id: String, usuario_id: String, fecha_inicio: String
             .map_err(|e| format!("Error al agregar token: {}", e))?;
     }
 
-    let response = client.crear_reserva(request).await
+    let response = client
+        .crear_reserva(request)
+        .await
         .map_err(|e| format!("Error al crear reserva: {}", e))?;
 
-    response.into_inner().reserva
+    response
+        .into_inner()
+        .reserva
         .ok_or_else(|| "Respuesta sin reserva".to_string())
 }
 
@@ -1359,9 +1519,13 @@ async fn cancelar_reserva(id: String) -> Result<ProtoReserva, String> {
             .map_err(|e| format!("Error al agregar token: {}", e))?;
     }
 
-    let response = client.cancelar_reserva(request).await
+    let response = client
+        .cancelar_reserva(request)
+        .await
         .map_err(|e| format!("Error al cancelar reserva: {}", e))?;
 
-    response.into_inner().reserva
+    response
+        .into_inner()
+        .reserva
         .ok_or_else(|| "Respuesta sin reserva".to_string())
 }

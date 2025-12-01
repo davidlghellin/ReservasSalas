@@ -16,8 +16,8 @@ impl Logger {
     /// Busca la ruta del log en la variable de entorno LOG_FILE
     /// Si no está definida, usa /tmp/tauri-app.log por defecto
     pub fn new() -> Result<Self, std::io::Error> {
-        let log_path = std::env::var("LOG_FILE")
-            .unwrap_or_else(|_| "/tmp/tauri-app.log".to_string());
+        let log_path =
+            std::env::var("LOG_FILE").unwrap_or_else(|_| "/tmp/tauri-app.log".to_string());
 
         Self::with_path(log_path)
     }

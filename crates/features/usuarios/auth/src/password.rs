@@ -41,8 +41,7 @@ impl PasswordService {
     /// # Errores
     /// Retorna error si el formato del hash es inválido
     pub fn verify_password(password: &str, hash: &str) -> Result<bool, String> {
-        let parsed_hash =
-            PasswordHash::new(hash).map_err(|e| format!("Hash inválido: {}", e))?;
+        let parsed_hash = PasswordHash::new(hash).map_err(|e| format!("Hash inválido: {}", e))?;
 
         let argon2 = Argon2::default();
 

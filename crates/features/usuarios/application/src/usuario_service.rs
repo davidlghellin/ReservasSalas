@@ -35,11 +35,7 @@ pub trait UsuarioService: Send + Sync {
     ) -> Result<(), UsuarioError>;
 
     /// Activa un usuario (solo admins)
-    async fn activar_usuario(
-        &self,
-        admin_id: String,
-        user_id: String,
-    ) -> Result<(), UsuarioError>;
+    async fn activar_usuario(&self, admin_id: String, user_id: String) -> Result<(), UsuarioError>;
 }
 
 /// Implementación del servicio de gestión de usuarios
@@ -153,11 +149,7 @@ impl<R: UsuarioRepository> UsuarioService for UsuarioServiceImpl<R> {
         Ok(())
     }
 
-    async fn activar_usuario(
-        &self,
-        admin_id: String,
-        user_id: String,
-    ) -> Result<(), UsuarioError> {
+    async fn activar_usuario(&self, admin_id: String, user_id: String) -> Result<(), UsuarioError> {
         // Verificar que quien llama sea admin
         self.verificar_admin(&admin_id).await?;
 
@@ -289,9 +281,7 @@ mod tests {
         let user2 = crear_usuario_test(&repo, "User 2", "user2@test.com", Rol::Usuario).await;
 
         // Usuario normal intenta actualizar rol
-        let result = service
-            .actualizar_rol(user1.id, user2.id, Rol::Admin)
-            .await;
+        let result = service.actualizar_rol(user1.id, user2.id, Rol::Admin).await;
 
         assert!(matches!(result, Err(UsuarioError::PermisosDenegados)));
     }

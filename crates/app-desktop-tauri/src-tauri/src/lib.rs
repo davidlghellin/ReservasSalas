@@ -12,7 +12,10 @@ pub fn run() {
     let logger = Logger::new().expect("Failed to initialize logger");
 
     logger.info("=== Iniciando aplicación Tauri ===");
-    logger.info(&format!("Logs guardados en: {}", logger.log_path().display()));
+    logger.info(&format!(
+        "Logs guardados en: {}",
+        logger.log_path().display()
+    ));
 
     let base_url =
         std::env::var("BACKEND_BASE_URL").unwrap_or_else(|_| "http://localhost:3000/api".into());

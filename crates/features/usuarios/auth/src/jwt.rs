@@ -42,8 +42,7 @@ impl JwtService {
     /// Retorna error si la generación del token falla
     pub fn generate_token(user_id: &str, email: &str, rol: Rol) -> Result<String, String> {
         let now = Utc::now();
-        let exp = (now + Duration::hours(TOKEN_EXPIRATION_HOURS))
-            .timestamp();
+        let exp = (now + Duration::hours(TOKEN_EXPIRATION_HOURS)).timestamp();
 
         let claims = Claims {
             sub: user_id.to_string(),
@@ -120,8 +119,8 @@ mod tests {
 
     #[test]
     fn test_validate_token_valido() {
-        let token = JwtService::generate_token("user-456", "admin@example.com", Rol::Admin)
-            .unwrap();
+        let token =
+            JwtService::generate_token("user-456", "admin@example.com", Rol::Admin).unwrap();
 
         let claims = JwtService::validate_token(&token);
         assert!(claims.is_ok());

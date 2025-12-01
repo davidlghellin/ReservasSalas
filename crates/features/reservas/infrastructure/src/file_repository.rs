@@ -54,9 +54,8 @@ impl FileReservaRepository {
             .map_err(|e| ReservaError::ErrorRepositorio(format!("Error al leer archivo: {}", e)))?;
 
         // Parsear JSON
-        let data: ReservasData = serde_json::from_str(&contents).map_err(|e| {
-            ReservaError::ErrorRepositorio(format!("Error al parsear JSON: {}", e))
-        })?;
+        let data: ReservasData = serde_json::from_str(&contents)
+            .map_err(|e| ReservaError::ErrorRepositorio(format!("Error al parsear JSON: {}", e)))?;
 
         // Actualizar cache
         let mut cache = self.cache.write().await;
@@ -89,11 +88,9 @@ impl FileReservaRepository {
         })?;
 
         // Escribir al archivo
-        fs::write(&self.file_path, json)
-            .await
-            .map_err(|e| {
-                ReservaError::ErrorRepositorio(format!("Error al escribir archivo: {}", e))
-            })?;
+        fs::write(&self.file_path, json).await.map_err(|e| {
+            ReservaError::ErrorRepositorio(format!("Error al escribir archivo: {}", e))
+        })?;
 
         Ok(())
     }

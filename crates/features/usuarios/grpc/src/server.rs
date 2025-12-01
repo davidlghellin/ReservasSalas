@@ -8,12 +8,11 @@ use crate::auth::{extract_admin_user, extract_auth_user};
 
 use crate::proto::{
     usuario_service_server::{UsuarioService as UsuarioServiceTrait, UsuarioServiceServer},
-    ActivarUsuarioRequest, ActivarUsuarioResponse, ActualizarNombreRequest,
-    ActualizarRolRequest, ChangePasswordRequest, ChangePasswordResponse,
-    DesactivarUsuarioRequest, DesactivarUsuarioResponse, ListarUsuariosRequest,
-    ListarUsuariosResponse, LoginRequest, LoginResponse, ObtenerUsuarioRequest,
-    RegisterRequest, RegisterResponse, UsuarioPublico, UsuarioPublicoResponse,
-    ValidateTokenRequest, ValidateTokenResponse,
+    ActivarUsuarioRequest, ActivarUsuarioResponse, ActualizarNombreRequest, ActualizarRolRequest,
+    ChangePasswordRequest, ChangePasswordResponse, DesactivarUsuarioRequest,
+    DesactivarUsuarioResponse, ListarUsuariosRequest, ListarUsuariosResponse, LoginRequest,
+    LoginResponse, ObtenerUsuarioRequest, RegisterRequest, RegisterResponse, UsuarioPublico,
+    UsuarioPublicoResponse, ValidateTokenRequest, ValidateTokenResponse,
 };
 
 pub struct UsuarioGrpcServer {
@@ -39,7 +38,10 @@ impl UsuarioGrpcServer {
 
 #[tonic::async_trait]
 impl UsuarioServiceTrait for UsuarioGrpcServer {
-    async fn login(&self, request: Request<LoginRequest>) -> Result<Response<LoginResponse>, Status> {
+    async fn login(
+        &self,
+        request: Request<LoginRequest>,
+    ) -> Result<Response<LoginResponse>, Status> {
         let req = request.into_inner();
 
         let login_response = self
@@ -68,7 +70,7 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
         let req = request.into_inner();
 
         // Parsear rol si viene
-        let rol = req.rol.as_ref().and_then(|r| Rol::from_str(r));
+        let rol = req.rol.as_ref().and_then(|r| Rol::from_str_opt(r));
 
         let register_response = self
             .auth_service
@@ -237,7 +239,7 @@ impl UsuarioServiceTrait for UsuarioGrpcServer {
         let auth_user = extract_admin_user(&request)?;
         let req = request.into_inner();
 
-        let nuevo_rol = Rol::from_str(&req.nuevo_rol)
+        let nuevo_rol = Rol::from_str_opt(&req.nuevo_rol)
             .ok_or_else(|| Status::invalid_argument("Rol inválido"))?;
 
         let usuario = self

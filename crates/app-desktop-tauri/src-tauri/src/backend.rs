@@ -113,9 +113,7 @@ fn log_status(method: &str, url: &str, status: StatusCode) {
     println!(
         "[app-desktop-tauri][resp] {method} {url} -> {} {}",
         status.as_u16(),
-        status
-            .canonical_reason()
-            .unwrap_or("Estado desconocido")
+        status.canonical_reason().unwrap_or("Estado desconocido")
     );
 }
 
@@ -171,4 +169,3 @@ async fn parse_error_body(response: reqwest::Response) -> String {
         Err(err) => format!("{status_text}: {err}"),
     }
 }
-

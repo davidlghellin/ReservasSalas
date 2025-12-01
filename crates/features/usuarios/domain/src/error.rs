@@ -43,10 +43,16 @@ impl UsuarioError {
     pub fn mensaje_usuario(&self) -> String {
         match self {
             UsuarioError::EmailInvalido(email) => {
-                format!("El email '{}' no es válido. Por favor, ingresa un email correcto.", email)
+                format!(
+                    "El email '{}' no es válido. Por favor, ingresa un email correcto.",
+                    email
+                )
             }
             UsuarioError::EmailDuplicado(email) => {
-                format!("El email '{}' ya está registrado. Intenta con otro email o inicia sesión.", email)
+                format!(
+                    "El email '{}' ya está registrado. Intenta con otro email o inicia sesión.",
+                    email
+                )
             }
             UsuarioError::NombreVacio => {
                 "El nombre no puede estar vacío. Por favor, ingresa tu nombre.".to_string()

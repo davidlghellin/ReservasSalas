@@ -33,4 +33,3 @@ pub struct LoginResponse {
     pub token: String,
     pub usuario: UsuarioInfo,
 }
-

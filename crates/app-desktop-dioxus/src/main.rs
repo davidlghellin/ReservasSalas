@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
 
 use dioxus::prelude::*;
-use serde::{Deserialize, Serialize};
-use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest};
 use salas_grpc::proto::{
     sala_service_client::SalaServiceClient, ActivarSalaRequest, CrearSalaRequest,
     DesactivarSalaRequest, ListarSalasRequest,
 };
+use serde::{Deserialize, Serialize};
 use tonic::{metadata::MetadataValue, Request};
+use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest};
 
 const BACKEND_URL: &str = "http://localhost:3000/api";
 const GRPC_URL: &str = "http://localhost:50051";
@@ -46,7 +46,7 @@ fn App() -> Element {
     let usuario_actual = use_signal(|| Option::<UsuarioInfo>::None);
 
     let current_state = app_state.read().clone();
-    
+
     match current_state {
         AppState::Login => {
             rsx! {
@@ -201,7 +201,7 @@ fn SalasApp(
 
     // Handler para crear sala
     let crear_sala_handler = move |_| {
-        let token_sig = token;
+        let _token_sig = token;
         spawn(async move {
             loading.set(true);
             mensaje.set(String::new());
@@ -481,11 +481,15 @@ async fn login_usuario(email: &str, password: &str) -> Result<(UsuarioInfo, Stri
         password: password.to_string(),
     });
 
-    let response = client.login(request).await
+    let response = client
+        .login(request)
+        .await
         .map_err(|e| format!("Error al hacer login: {}", e))?;
 
     let login_response = response.into_inner();
-    let usuario_proto = login_response.usuario.ok_or_else(|| "Respuesta sin usuario".to_string())?;
+    let usuario_proto = login_response
+        .usuario
+        .ok_or_else(|| "Respuesta sin usuario".to_string())?;
 
     let usuario = UsuarioInfo {
         id: usuario_proto.id,
@@ -565,9 +569,7 @@ async fn activar_sala(id: &str, token: &str) -> Result<SalaDto, String> {
         .await
         .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-    let mut request = Request::new(ActivarSalaRequest {
-        id: id.to_string(),
-    });
+    let mut request = Request::new(ActivarSalaRequest { id: id.to_string() });
 
     // Agregar token JWT
     let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
@@ -594,9 +596,7 @@ async fn desactivar_sala(id: &str, token: &str) -> Result<SalaDto, String> {
         .await
         .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-    let mut request = Request::new(DesactivarSalaRequest {
-        id: id.to_string(),
-    });
+    let mut request = Request::new(DesactivarSalaRequest { id: id.to_string() });
 
     // Agregar token JWT
     let auth_value = MetadataValue::try_from(format!("Bearer {}", token))

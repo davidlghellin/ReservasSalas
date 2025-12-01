@@ -48,6 +48,7 @@ fn estado_to_proto(estado: &EstadoReserva) -> i32 {
     }
 }
 
+#[allow(clippy::result_large_err)]
 fn parse_datetime(s: &str) -> Result<DateTime<Utc>, Status> {
     DateTime::parse_from_rfc3339(s)
         .map(|dt| dt.with_timezone(&Utc))
@@ -234,237 +235,166 @@ impl<S: ReservaService + 'static> ReservaServiceTrait for ReservaGrpcServer<S> {
         }))
     }
 }
-//
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use chrono::Duration;
-//     use reservas_application::ReservaServiceImpl;
-//     use reservas_domain::Reserva;
-//     use std::collections::HashMap;
-//     use std::sync::Mutex;
-//
-//     // Mock repository para testing
-//     struct MockReservaRepository {
-//         reservas: Arc<Mutex<HashMap<String, Reserva>>>,
-//     }
-//
-//     impl MockReservaRepository {
-//         fn new() -> Self {
-//             Self {
-//                 reservas: Arc::new(Mutex::new(HashMap::new())),
-//             }
-//         }
-//     }
-//
-//     #[async_trait::async_trait]
-//     impl reservas_application::ReservaRepository for MockReservaRepository {
-//         async fn guardar(
-//             &self,
-//             reserva: &Reserva,
-//         ) -> Result<(), reservas_domain::ReservaError> {
-//             let mut reservas = self.reservas.lock().unwrap();
-//             reservas.insert(reserva.id().to_string(), reserva.clone());
-//             Ok(())
-//         }
-//
-//         async fn obtener(
-//             &self,
-//             id: &str,
-//         ) -> Result<Option<Reserva>, reservas_domain::ReservaError> {
-//             let reservas = self.reservas.lock().unwrap();
-//             Ok(reservas.get(id).cloned())
-//         }
-//
-//         async fn listar(&self) -> Result<Vec<Reserva>, reservas_domain::ReservaError> {
-//             let reservas = self.reservas.lock().unwrap();
-//             Ok(reservas.values().cloned().collect())
-//         }
-//
-//         async fn listar_por_sala(
-//             &self,
-//             sala_id: &str,
-//         ) -> Result<Vec<Reserva>, reservas_domain::ReservaError> {
-//             let reservas = self.reservas.lock().unwrap();
-//             Ok(reservas
-//                 .values()
-//                 .filter(|r| r.sala_id() == sala_id)
-//                 .cloned()
-//                 .collect())
-//         }
-//
-//         async fn listar_por_usuario(
-//             &self,
-//             usuario_id: &str,
-//         ) -> Result<Vec<Reserva>, reservas_domain::ReservaError> {
-//             let reservas = self.reservas.lock().unwrap();
-//             Ok(reservas
-//                 .values()
-//                 .filter(|r| r.usuario_id() == usuario_id)
-//                 .cloned()
-//                 .collect())
-//         }
-//
-//         async fn listar_por_sala_y_rango(
-//             &self,
-//             sala_id: &str,
-//             inicio: DateTime<Utc>,
-//             fin: DateTime<Utc>,
-//         ) -> Result<Vec<Reserva>, reservas_domain::ReservaError> {
-//             let reservas = self.reservas.lock().unwrap();
-//             Ok(reservas
-//                 .values()
-//                 .filter(|r| {
-//                     r.sala_id() == sala_id
-//                         && r.esta_activa()
-//                         && r.fecha_inicio() < fin
-//                         && r.fecha_fin() > inicio
-//                 })
-//                 .cloned()
-//                 .collect())
-//         }
-//
-//         async fn actualizar(
-//             &self,
-//             reserva: &Reserva,
-//         ) -> Result<(), reservas_domain::ReservaError> {
-//             let mut reservas = self.reservas.lock().unwrap();
-//             if reservas.contains_key(reserva.id()) {
-//                 reservas.insert(reserva.id().to_string(), reserva.clone());
-//                 Ok(())
-//             } else {
-//                 Err(reservas_domain::ReservaError::NoEncontrada)
-//             }
-//         }
-//
-//         async fn eliminar(&self, id: &str) -> Result<(), reservas_domain::ReservaError> {
-//             let mut reservas = self.reservas.lock().unwrap();
-//             if reservas.remove(id).is_some() {
-//                 Ok(())
-//             } else {
-//                 Err(reservas_domain::ReservaError::NoEncontrada)
-//             }
-//         }
-//     }
-//
-//     #[tokio::test]
-//     async fn test_crear_reserva_grpc() {
-//         let repo = MockReservaRepository::new();
-//         let service = ReservaServiceImpl::new(repo);
-//         let grpc_server = ReservaGrpcServer::new(service);
-//
-//         let ahora = Utc::now();
-//         let inicio = ahora + Duration::hours(1);
-//         let fin = inicio + Duration::hours(2);
-//
-//         let request = Request::new(CrearReservaRequest {
-//             sala_id: "sala1".to_string(),
-//             usuario_id: "usuario1".to_string(),
-//             fecha_inicio: inicio.to_rfc3339(),
-//             fecha_fin: fin.to_rfc3339(),
-//         });
-//
-//         let response = grpc_server.crear_reserva(request).await.unwrap();
-//         let reserva = response.into_inner().reserva.unwrap();
-//
-//         assert_eq!(reserva.sala_id, "sala1");
-//         assert_eq!(reserva.usuario_id, "usuario1");
-//         assert_eq!(reserva.estado, ProtoEstadoReserva::Activa as i32);
-//     }
-//
-//     #[tokio::test]
-//     async fn test_listar_reservas_grpc() {
-//         let repo = MockReservaRepository::new();
-//         let service = ReservaServiceImpl::new(repo);
-//         let grpc_server = ReservaGrpcServer::new(service);
-//
-//         let ahora = Utc::now();
-//
-//         // Crear primera reserva
-//         let request1 = Request::new(CrearReservaRequest {
-//             sala_id: "sala1".to_string(),
-//             usuario_id: "usuario1".to_string(),
-//             fecha_inicio: (ahora + Duration::hours(1)).to_rfc3339(),
-//             fecha_fin: (ahora + Duration::hours(2)).to_rfc3339(),
-//         });
-//         grpc_server.crear_reserva(request1).await.unwrap();
-//
-//         // Crear segunda reserva
-//         let request2 = Request::new(CrearReservaRequest {
-//             sala_id: "sala2".to_string(),
-//             usuario_id: "usuario2".to_string(),
-//             fecha_inicio: (ahora + Duration::hours(3)).to_rfc3339(),
-//             fecha_fin: (ahora + Duration::hours(4)).to_rfc3339(),
-//         });
-//         grpc_server.crear_reserva(request2).await.unwrap();
-//
-//         // Listar todas
-//         let request = Request::new(ListarReservasRequest {});
-//         let response = grpc_server.listar_reservas(request).await.unwrap();
-//         let reservas = response.into_inner().reservas;
-//
-//         assert_eq!(reservas.len(), 2);
-//     }
-//
-//     #[tokio::test]
-//     async fn test_cancelar_reserva_grpc() {
-//         let repo = MockReservaRepository::new();
-//         let service = ReservaServiceImpl::new(repo);
-//         let grpc_server = ReservaGrpcServer::new(service);
-//
-//         let ahora = Utc::now();
-//
-//         // Crear reserva
-//         let request = Request::new(CrearReservaRequest {
-//             sala_id: "sala1".to_string(),
-//             usuario_id: "usuario1".to_string(),
-//             fecha_inicio: (ahora + Duration::hours(1)).to_rfc3339(),
-//             fecha_fin: (ahora + Duration::hours(2)).to_rfc3339(),
-//         });
-//         let response = grpc_server.crear_reserva(request).await.unwrap();
-//         let id = response.into_inner().reserva.unwrap().id;
-//
-//         // Cancelar reserva
-//         let request = Request::new(CancelarReservaRequest { id });
-//         let response = grpc_server.cancelar_reserva(request).await.unwrap();
-//         let reserva = response.into_inner().reserva.unwrap();
-//
-//         assert_eq!(reserva.estado, ProtoEstadoReserva::Cancelada as i32);
-//     }
-//
-//     #[tokio::test]
-//     async fn test_verificar_disponibilidad_grpc() {
-//         let repo = MockReservaRepository::new();
-//         let service = ReservaServiceImpl::new(repo);
-//         let grpc_server = ReservaGrpcServer::new(service);
-//
-//         let ahora = Utc::now();
-//
-//         // Crear reserva
-//         let request = Request::new(CrearReservaRequest {
-//             sala_id: "sala1".to_string(),
-//             usuario_id: "usuario1".to_string(),
-//             fecha_inicio: (ahora + Duration::hours(1)).to_rfc3339(),
-//             fecha_fin: (ahora + Duration::hours(3)).to_rfc3339(),
-//         });
-//         grpc_server.crear_reserva(request).await.unwrap();
-//
-//         // Verificar horario ocupado
-//         let request = Request::new(VerificarDisponibilidadRequest {
-//             sala_id: "sala1".to_string(),
-//             fecha_inicio: (ahora + Duration::hours(2)).to_rfc3339(),
-//             fecha_fin: (ahora + Duration::hours(4)).to_rfc3339(),
-//         });
-//         let response = grpc_server.verificar_disponibilidad(request).await.unwrap();
-//         assert!(!response.into_inner().disponible);
-//
-//         // Verificar horario libre
-//         let request = Request::new(VerificarDisponibilidadRequest {
-//             sala_id: "sala1".to_string(),
-//             fecha_inicio: (ahora + Duration::hours(5)).to_rfc3339(),
-//             fecha_fin: (ahora + Duration::hours(6)).to_rfc3339(),
-//         });
-//         let response = grpc_server.verificar_disponibilidad(request).await.unwrap();
-//         assert!(response.into_inner().disponible);
-//     }
-// }
+
+#[cfg(test)]
+mod grpc_unit_tests {
+    use super::*;
+    use async_trait::async_trait;
+    use chrono::{DateTime, Utc};
+    use reservas_domain::{EstadoReserva, Reserva as DomainReserva, ReservaError};
+
+    /// Mock mínimo del `ReservaService` para tests unitarios del servidor gRPC.
+    struct MockReservaService {
+        reservas: Vec<DomainReserva>,
+    }
+
+    impl MockReservaService {
+        fn new() -> Self {
+            let ahora = Utc::now();
+            let r = DomainReserva::from_existing(
+                "r1".to_string(),
+                "sala1".to_string(),
+                "usuario1".to_string(),
+                ahora,
+                ahora + chrono::Duration::hours(1),
+                EstadoReserva::Activa,
+                ahora,
+            );
+            Self { reservas: vec![r] }
+        }
+    }
+
+    #[async_trait]
+    impl reservas_application::ReservaService for MockReservaService {
+        async fn crear_reserva(
+            &self,
+            _sala_id: String,
+            _usuario_id: String,
+            _fecha_inicio: DateTime<Utc>,
+            _fecha_fin: DateTime<Utc>,
+        ) -> Result<DomainReserva, ReservaError> {
+            // Devuelve la primera reserva como "creada" (mock)
+            Ok(self.reservas[0].clone())
+        }
+
+        async fn obtener_reserva(&self, id: &str) -> Result<Option<DomainReserva>, ReservaError> {
+            Ok(self.reservas.iter().find(|&r| r.id() == id).cloned())
+        }
+
+        async fn listar_reservas(&self) -> Result<Vec<DomainReserva>, ReservaError> {
+            Ok(self.reservas.clone())
+        }
+
+        async fn listar_reservas_por_sala(
+            &self,
+            sala_id: &str,
+        ) -> Result<Vec<DomainReserva>, ReservaError> {
+            Ok(self
+                .reservas
+                .iter()
+                .filter(|&r| r.sala_id() == sala_id)
+                .cloned()
+                .collect())
+        }
+
+        async fn listar_reservas_por_usuario(
+            &self,
+            usuario_id: &str,
+        ) -> Result<Vec<DomainReserva>, ReservaError> {
+            Ok(self
+                .reservas
+                .iter()
+                .filter(|&r| r.usuario_id() == usuario_id)
+                .cloned()
+                .collect())
+        }
+
+        async fn cancelar_reserva(&self, id: &str) -> Result<DomainReserva, ReservaError> {
+            self.obtener_reserva(id)
+                .await?
+                .ok_or(ReservaError::NoEncontrada)
+        }
+
+        async fn completar_reserva(&self, id: &str) -> Result<DomainReserva, ReservaError> {
+            self.obtener_reserva(id)
+                .await?
+                .ok_or(ReservaError::NoEncontrada)
+        }
+
+        async fn verificar_disponibilidad(
+            &self,
+            _sala_id: &str,
+            _fecha_inicio: DateTime<Utc>,
+            _fecha_fin: DateTime<Utc>,
+        ) -> Result<bool, ReservaError> {
+            Ok(true)
+        }
+    }
+
+    #[tokio::test]
+    async fn servidor_listar_reservas_devuelve_lista() {
+        let service = MockReservaService::new();
+        let server = ReservaGrpcServer::new(service);
+
+        // Generar token válido y añadirlo al metadata para pasar la autenticación
+        let token = usuarios_auth::jwt::JwtService::generate_token(
+            "test-user",
+            "test@example.com",
+            usuarios_domain::Rol::Usuario,
+        )
+        .expect("failed to generate token");
+        let mut req = tonic::Request::new(ListarReservasRequest {});
+        req.metadata_mut().insert(
+            "authorization",
+            tonic::metadata::MetadataValue::try_from(format!("Bearer {}", token)).unwrap(),
+        );
+
+        let resp = server
+            .listar_reservas(req)
+            .await
+            .expect("listar_reservas falló");
+        let inner = resp.into_inner();
+
+        assert_eq!(inner.reservas.len(), 1);
+        let proto = &inner.reservas[0];
+        assert_eq!(proto.sala_id, "sala1");
+        assert_eq!(proto.usuario_id, "usuario1");
+        assert_eq!(proto.estado, ProtoEstadoReserva::Activa as i32);
+    }
+
+    #[tokio::test]
+    async fn servidor_crear_reserva_devuelve_reserva() {
+        let service = MockReservaService::new();
+        let server = ReservaGrpcServer::new(service);
+
+        let ahora = Utc::now();
+        let mut req = tonic::Request::new(CrearReservaRequest {
+            sala_id: "sala1".to_string(),
+            usuario_id: "usuario1".to_string(),
+            fecha_inicio: ahora.to_rfc3339(),
+            fecha_fin: (ahora + chrono::Duration::hours(1)).to_rfc3339(),
+        });
+
+        let token = usuarios_auth::jwt::JwtService::generate_token(
+            "test-user",
+            "test@example.com",
+            usuarios_domain::Rol::Usuario,
+        )
+        .expect("failed to generate token");
+        req.metadata_mut().insert(
+            "authorization",
+            tonic::metadata::MetadataValue::try_from(format!("Bearer {}", token)).unwrap(),
+        );
+
+        let resp = server
+            .crear_reserva(req)
+            .await
+            .expect("crear_reserva falló");
+        let inner = resp.into_inner();
+        let proto = inner.reserva.expect("no vino reserva");
+
+        assert_eq!(proto.sala_id, "sala1");
+        assert_eq!(proto.usuario_id, "usuario1");
+        assert_eq!(proto.estado, ProtoEstadoReserva::Activa as i32);
+    }
+}

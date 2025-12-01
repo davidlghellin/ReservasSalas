@@ -82,13 +82,14 @@ impl FileUsuarioRepository {
         let data = UsuariosData { usuarios };
 
         // Serializar a JSON (pretty print)
-        let json = serde_json::to_string_pretty(&data)
-            .map_err(|e| UsuarioError::ErrorRepositorio(format!("Error al serializar JSON: {}", e)))?;
+        let json = serde_json::to_string_pretty(&data).map_err(|e| {
+            UsuarioError::ErrorRepositorio(format!("Error al serializar JSON: {}", e))
+        })?;
 
         // Escribir al archivo
-        fs::write(&self.file_path, json)
-            .await
-            .map_err(|e| UsuarioError::ErrorRepositorio(format!("Error al escribir archivo: {}", e)))?;
+        fs::write(&self.file_path, json).await.map_err(|e| {
+            UsuarioError::ErrorRepositorio(format!("Error al escribir archivo: {}", e))
+        })?;
 
         Ok(())
     }

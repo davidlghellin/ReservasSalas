@@ -58,14 +58,11 @@ impl FileSalaRepository {
         // Leer el archivo
         let contents = fs::read_to_string(&self.file_path)
             .await
-            .map_err(|e| {
-                SalaError::ErrorRepositorio(format!("Error al leer archivo: {}", e))
-            })?;
+            .map_err(|e| SalaError::ErrorRepositorio(format!("Error al leer archivo: {}", e)))?;
 
         // Parsear JSON
-        let data: SalasData = serde_json::from_str(&contents).map_err(|e| {
-            SalaError::ErrorRepositorio(format!("Error al parsear JSON: {}", e))
-        })?;
+        let data: SalasData = serde_json::from_str(&contents)
+            .map_err(|e| SalaError::ErrorRepositorio(format!("Error al parsear JSON: {}", e)))?;
 
         // Actualizar cache
         let mut cache = self.cache.write().await;
@@ -93,9 +90,8 @@ impl FileSalaRepository {
         let data = SalasData { salas };
 
         // Serializar a JSON (pretty print)
-        let json = serde_json::to_string_pretty(&data).map_err(|e| {
-            SalaError::ErrorRepositorio(format!("Error al serializar JSON: {}", e))
-        })?;
+        let json = serde_json::to_string_pretty(&data)
+            .map_err(|e| SalaError::ErrorRepositorio(format!("Error al serializar JSON: {}", e)))?;
 
         // Escribir al archivo
         fs::write(&self.file_path, json).await.map_err(|e| {

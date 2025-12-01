@@ -10,9 +10,7 @@ use salas_grpc::proto::{
     sala_service_client::SalaServiceClient, ActivarSalaRequest, CrearSalaRequest,
     DesactivarSalaRequest, ListarSalasRequest,
 };
-use usuarios_grpc::proto::{
-    usuario_service_client::UsuarioServiceClient, LoginRequest,
-};
+use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest};
 
 const GRPC_URL: &str = "http://localhost:50051";
 
@@ -36,7 +34,9 @@ fn main() -> Result<(), slint::PlatformError> {
             cargar_salas_ui(&ui, &salas_model);
         }
         Err(e) => {
-            ui.set_mensaje(format!("⚠️ Login automático falló: {}. Funcionalidad limitada.", e).into());
+            ui.set_mensaje(
+                format!("⚠️ Login automático falló: {}. Funcionalidad limitada.", e).into(),
+            );
         }
     }
 
@@ -276,9 +276,7 @@ fn activar_sala(id: &str) -> Result<SalaDto, String> {
             .await
             .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-        let mut request = Request::new(ActivarSalaRequest {
-            id: id.to_string(),
-        });
+        let mut request = Request::new(ActivarSalaRequest { id: id.to_string() });
         add_auth_token(&mut request)?;
 
         let response = client
@@ -304,9 +302,7 @@ fn desactivar_sala(id: &str) -> Result<SalaDto, String> {
             .await
             .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-        let mut request = Request::new(DesactivarSalaRequest {
-            id: id.to_string(),
-        });
+        let mut request = Request::new(DesactivarSalaRequest { id: id.to_string() });
         add_auth_token(&mut request)?;
 
         let response = client
