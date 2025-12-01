@@ -11,7 +11,7 @@ path = "src/main.rs"
 iced = { workspace = true, features = ["tokio"] }
 notify-rust = { workspace = true }
 once_cell = { workspace = true }
-tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+tokio = { workspace = true }
 tonic = { workspace = true }
 
 # Usar el crate gRPC local
