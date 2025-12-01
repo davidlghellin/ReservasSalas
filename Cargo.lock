@@ -7591,6 +7591,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "reservas-domain"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "thiserror 2.0.17",
+ "uuid",
+]
+
+[[package]]
 name = "reservas-salas"
 version = "0.1.0"
 dependencies = [
