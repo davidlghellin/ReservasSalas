@@ -7591,6 +7591,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "reservas-application"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "reservas-domain",
+ "tokio",
+]
+
+[[package]]
 name = "reservas-domain"
 version = "0.1.0"
 dependencies = [
