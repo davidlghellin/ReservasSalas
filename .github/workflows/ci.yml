@@ -32,31 +32,23 @@ jobs:
           restore-keys: |
             cargo-${{ matrix.rust }}-
 
-      - name: Install Rust (${{ matrix.rust }})
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          profile: minimal
-          override: true
-          components: rustfmt, clippy
+      - name: Install Rust toolchains
+        run: |
+          rustup toolchain install stable --profile default --component llvm-tools-preview
+          rustup toolchain install nightly --profile default
+        shell: bash
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@nextest
 
       - name: Show Rust version
         run: rustc --version && cargo --version
 
-      - name: Build workspace
-        run: cargo build --workspace --all-features --locked --verbose
+      - name: Run Format Check
+        run: cargo +nightly fmt -- --check
 
-      - name: Install cargo-nextest
-        run: cargo install cargo-nextest --locked
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
-      - name: Run tests with nextest
-        env:
-          RUST_BACKTRACE: 1
-        run: cargo nextest run --workspace --all-features --locked --verbose
-
-      - name: Upload test artifacts (only on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-artifacts-${{ matrix.rust }}
-          path: target
+      - name: Run Cargo Test
+        run: cargo nextest run
