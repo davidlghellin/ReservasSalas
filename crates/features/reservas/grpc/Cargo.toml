@@ -16,4 +16,4 @@ chrono = { workspace = true, features = ["serde"] }
 tonic-build = { workspace = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["full"] }
+tokio = { workspace = true}

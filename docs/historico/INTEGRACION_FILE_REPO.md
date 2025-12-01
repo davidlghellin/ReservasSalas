@@ -12,7 +12,7 @@ Usar `FileSalaRepository` directamente sin necesidad de servidor gRPC.
 # crates/app-desktop-iced/Cargo.toml
 [dependencies]
 iced = { version = "0.13", features = ["tokio"] }
-tokio = { workspace = true, features = ["full"] }
+tokio = { workspace = true}
 
 # Capas de dominio
 salas-domain = { path = "../features/salas/domain" }
