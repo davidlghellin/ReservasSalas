@@ -66,8 +66,8 @@ jobs:
       - name: Run Format Check
         run: cargo +nightly fmt -- --check
 
-      - name: Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features --tests -- -D warnings
 
-      - name: Run Cargo Test
-        run: cargo nextest run
+      - name: Tests
+        run: cargo nextest run --all-features
