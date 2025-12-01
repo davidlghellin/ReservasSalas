@@ -1,28 +1,10 @@
 {
   "salas": {
-    "8873c7b3-b391-4ce2-9844-5fd79df29fea": {
-      "id": "8873c7b3-b391-4ce2-9844-5fd79df29fea",
-      "nombre": "rome",
-      "capacidad": 10,
-      "activa": false
-    },
-    "5a6f79f3-6fff-49c3-a330-f80f65ed84b6": {
-      "id": "5a6f79f3-6fff-49c3-a330-f80f65ed84b6",
-      "nombre": "nueva",
-      "capacidad": 10,
-      "activa": false
-    },
     "b241309c-ebf6-4f06-bfa0-8aef5697979a": {
       "id": "b241309c-ebf6-4f06-bfa0-8aef5697979a",
       "nombre": "andromeda",
       "capacidad": 1,
       "activa": true
-    },
-    "8de6f74a-b9ac-4ca1-ad57-0e178ee4f28f": {
-      "id": "8de6f74a-b9ac-4ca1-ad57-0e178ee4f28f",
-      "nombre": "asf",
-      "capacidad": 10,
-      "activa": false
     }
   }
 }
