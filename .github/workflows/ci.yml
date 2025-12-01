@@ -31,7 +31,8 @@ jobs:
             libgdk-pixbuf2.0-dev \
             libpango1.0-dev \
             libcairo2-dev \
-            libatk1.0-dev
+            libatk1.0-dev \
+            libsoup-3.0-dev
 
       - name: Cache cargo registry, git, bin and target
         uses: actions/cache@v4
