@@ -28,6 +28,7 @@ impl From<Claims> for AuthUser {
 /// Extrae y valida el token JWT del metadata de gRPC
 ///
 /// El token debe venir en el header "authorization" con formato "Bearer <token>"
+#[allow(clippy::result_large_err)]
 pub fn extract_auth_user<T>(request: &Request<T>) -> Result<AuthUser, Status> {
     // Obtener el valor del header authorization
     let token = request
@@ -55,6 +56,7 @@ pub fn extract_auth_user<T>(request: &Request<T>) -> Result<AuthUser, Status> {
 }
 
 /// Extrae y valida que el usuario autenticado sea administrador
+#[allow(clippy::result_large_err)]
 pub fn extract_admin_user<T>(request: &Request<T>) -> Result<AuthUser, Status> {
     let auth_user = extract_auth_user(request)?;
 

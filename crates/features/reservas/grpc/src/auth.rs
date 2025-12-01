@@ -28,6 +28,7 @@ impl From<Claims> for AuthUser {
 /// Extrae y valida el token JWT del metadata de gRPC
 ///
 /// El token debe venir en el header "authorization" con formato "Bearer <token>"
+#[allow(clippy::result_large_err)]
 pub fn extract_auth_user<T>(request: &Request<T>) -> Result<AuthUser, Status> {
     // Obtener el valor del header authorization
     let token = request
@@ -55,11 +56,13 @@ pub fn extract_auth_user<T>(request: &Request<T>) -> Result<AuthUser, Status> {
 }
 
 /// Trait de extensión para facilitar la extracción de AuthUser desde Request
+#[allow(clippy::result_large_err)]
 pub trait RequestAuthExt {
     fn require_auth_user(&self) -> Result<AuthUser, Status>;
 }
 
 impl<T> RequestAuthExt for Request<T> {
+    #[allow(clippy::result_large_err)]
     fn require_auth_user(&self) -> Result<AuthUser, Status> {
         extract_auth_user(self)
     }

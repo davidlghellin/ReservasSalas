@@ -93,11 +93,7 @@ impl BackendApi {
     }
 
     fn endpoint(&self, path: &str) -> String {
-        format!(
-            "{}/{}",
-            self.base_url,
-            path.trim_start_matches('/').to_string()
-        )
+        format!("{}/{}", self.base_url, path.trim_start_matches('/'))
     }
 }
 

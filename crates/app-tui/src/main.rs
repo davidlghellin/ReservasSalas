@@ -14,6 +14,7 @@ struct Sala {
     activa: bool,
 }
 
+#[allow(dead_code)]
 struct UsuarioInfo {
     id: String,
     nombre: String,

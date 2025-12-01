@@ -60,6 +60,7 @@ fn main() -> iced::Result {
         .run_with(App::new)
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 enum Message {
     // Mensajes de login
@@ -120,7 +121,7 @@ enum AppState {
         loading: bool,
     },
     Authenticated {
-        usuario: UsuarioInfo,
+        usuario: Box<UsuarioInfo>,
         tab_actual: Tab,
 
         // Estado de salas
@@ -212,7 +213,7 @@ impl App {
 
                 // Cambiar a estado autenticado
                 self.state = AppState::Authenticated {
-                    usuario,
+                    usuario: Box::new(usuario),
                     tab_actual: Tab::Salas,
                     salas: Vec::new(),
                     nuevo_nombre: String::new(),
@@ -688,12 +689,12 @@ impl App {
 
         let form = column![
             text("Email:").size(16),
-            text_input("usuario@ejemplo.com", &email)
+            text_input("usuario@ejemplo.com", email)
                 .on_input(Message::EmailChanged)
                 .padding(10)
                 .width(Length::Fill),
             text("Contraseña:").size(16),
-            text_input("", &password)
+            text_input("", password)
                 .on_input(Message::PasswordChanged)
                 .padding(10)
                 .width(Length::Fill),
@@ -722,14 +723,15 @@ impl App {
             .into()
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn view_main<'a>(
         &'a self,
         usuario: &'a UsuarioInfo,
         tab_actual: Tab,
-        salas: &'a Vec<SalaDto>,
+        salas: &'a [SalaDto],
         nuevo_nombre: &'a str,
         nueva_capacidad: &'a str,
-        reservas: &'a Vec<ProtoReserva>,
+        reservas: &'a [ProtoReserva],
         sala_seleccionada: &'a str,
         fecha_inicio: &'a str,
         fecha_fin: &'a str,
@@ -831,7 +833,7 @@ impl App {
 
     fn view_salas_tab<'a>(
         &'a self,
-        salas: &'a Vec<SalaDto>,
+        salas: &'a [SalaDto],
         nuevo_nombre: &'a str,
         nueva_capacidad: &'a str,
         loading: bool,
@@ -957,8 +959,8 @@ impl App {
 
     fn view_reservas_tab<'a>(
         &'a self,
-        reservas: &'a Vec<ProtoReserva>,
-        salas: &'a Vec<SalaDto>,
+        reservas: &'a [ProtoReserva],
+        salas: &'a [SalaDto],
         sala_seleccionada: &'a str,
         fecha_inicio: &'a str,
         fecha_fin: &'a str,
@@ -978,7 +980,7 @@ impl App {
                                 .map(|sala| {
                                     button(text(format!(
                                         "{} {}",
-                                        if sala_seleccionada == &sala.id {
+                                        if sala_seleccionada == sala.id.as_str() {
                                             "✓"
                                         } else {
                                             "○"
@@ -1107,9 +1109,9 @@ impl App {
                                     .align_y(Alignment::Center),
                                     text(format!(
                                         "📅 {} {} - {} {}",
-                                        fecha_inicio_formatted.get(0).unwrap_or(&""),
+                                        fecha_inicio_formatted.first().unwrap_or(&""),
                                         fecha_inicio_formatted.get(1).unwrap_or(&""),
-                                        fecha_fin_formatted.get(0).unwrap_or(&""),
+                                        fecha_fin_formatted.first().unwrap_or(&""),
                                         fecha_fin_formatted.get(1).unwrap_or(&""),
                                     )),
                                     text(format!("ID: {}", reserva.id)).size(12),
@@ -1204,6 +1206,7 @@ fn mostrar_notificacion(titulo: &str, mensaje: &str, tipo: TipoNotificacion) {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 enum TipoNotificacion {
     Exito,
@@ -1361,7 +1364,7 @@ async fn listar_salas() -> Result<Vec<SalaDto>, String> {
 
         // Agregar token JWT si existe
         if let Some(token) = get_jwt_token().await {
-            add_auth_token(&mut request, &token).map_err(|e| tonic::Status::internal(e))?;
+            add_auth_token(&mut request, &token).map_err(tonic::Status::internal)?;
         }
 
         client.listar_salas(request).await
@@ -1380,7 +1383,7 @@ async fn crear_sala(nombre: String, capacidad: u32) -> Result<SalaDto, String> {
 
             // Agregar token JWT si existe
             if let Some(token) = get_jwt_token().await {
-                add_auth_token(&mut request, &token).map_err(|e| tonic::Status::internal(e))?;
+                add_auth_token(&mut request, &token).map_err(tonic::Status::internal)?;
             }
 
             client.crear_sala(request).await
@@ -1399,7 +1402,7 @@ async fn activar_sala(id: String) -> Result<SalaDto, String> {
 
             // Agregar token JWT si existe
             if let Some(token) = get_jwt_token().await {
-                add_auth_token(&mut request, &token).map_err(|e| tonic::Status::internal(e))?;
+                add_auth_token(&mut request, &token).map_err(tonic::Status::internal)?;
             }
 
             client.activar_sala(request).await
@@ -1419,7 +1422,7 @@ async fn desactivar_sala(id: String) -> Result<SalaDto, String> {
 
             // Agregar token JWT si existe
             if let Some(token) = get_jwt_token().await {
-                add_auth_token(&mut request, &token).map_err(|e| tonic::Status::internal(e))?;
+                add_auth_token(&mut request, &token).map_err(tonic::Status::internal)?;
             }
 
             client.desactivar_sala(request).await

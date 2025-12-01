@@ -81,9 +81,9 @@ fn LoginScreen(
     mut token: Signal<Option<String>>,
     mut usuario_actual: Signal<Option<UsuarioInfo>>,
 ) -> Element {
-    let mut email = use_signal(|| String::new());
-    let mut password = use_signal(|| String::new());
-    let mut error = use_signal(|| String::new());
+    let mut email = use_signal(String::new);
+    let mut password = use_signal(String::new);
+    let mut error = use_signal(String::new);
     let mut loading = use_signal(|| false);
 
     let login_handler = move |_| {
@@ -181,10 +181,10 @@ fn SalasApp(
     mut app_state: Signal<AppState>,
     mut usuario_actual: Signal<Option<UsuarioInfo>>,
 ) -> Element {
-    let mut salas = use_signal(|| Vec::<SalaDto>::new());
-    let mut nuevo_nombre = use_signal(|| String::new());
+    let mut salas = use_signal(Vec::<SalaDto>::new);
+    let mut nuevo_nombre = use_signal(String::new);
     let mut nueva_capacidad = use_signal(|| String::from("10"));
-    let mut mensaje = use_signal(|| String::new());
+    let mut mensaje = use_signal(String::new);
     let mut loading = use_signal(|| false);
 
     // Cargar salas al iniciar

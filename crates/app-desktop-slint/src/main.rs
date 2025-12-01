@@ -62,7 +62,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 return;
             }
 
-            match crear_sala(&nombre.to_string(), capacidad as u32) {
+            match crear_sala(nombre.as_ref(), capacidad as u32) {
                 Ok(_) => {
                     ui.set_mensaje(format!("✅ Sala '{}' creada correctamente", nombre).into());
                     ui.set_nuevo_nombre("".into());
@@ -89,7 +89,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let ui = ui_weak.unwrap();
             ui.set_loading(true);
 
-            match activar_sala(&id.to_string()) {
+            match activar_sala(id.as_ref()) {
                 Ok(_) => {
                     ui.set_mensaje("✅ Sala activada correctamente".into());
                     cargar_salas_ui(&ui, &salas_model);
@@ -112,7 +112,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let ui = ui_weak.unwrap();
             ui.set_loading(true);
 
-            match desactivar_sala(&id.to_string()) {
+            match desactivar_sala(id.as_ref()) {
                 Ok(_) => {
                     ui.set_mensaje("✅ Sala desactivada correctamente".into());
                     cargar_salas_ui(&ui, &salas_model);
