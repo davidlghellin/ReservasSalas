@@ -17,3 +17,5 @@ tonic = { workspace = true }
 # Usar el crate gRPC local
 salas-grpc = { path = "../features/salas/grpc" }
 usuarios-grpc = { path = "../features/usuarios/grpc" }
+reservas-grpc = { path = "../features/reservas/grpc" }
+chrono = { workspace = true }

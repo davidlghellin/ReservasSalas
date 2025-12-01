@@ -232,9 +232,11 @@ dependencies = [
 name = "app-desktop-iced"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "iced",
  "notify-rust",
  "once_cell",
+ "reservas-grpc",
  "salas-grpc",
  "tokio",
  "tonic",
