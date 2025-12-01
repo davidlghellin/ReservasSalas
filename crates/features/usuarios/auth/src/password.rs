@@ -1,7 +1,8 @@
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use rand_core::OsRng;
 
 /// Servicio para hashear y verificar contraseñas usando Argon2
 pub struct PasswordService;
@@ -40,8 +41,7 @@ impl PasswordService {
     /// # Errores
     /// Retorna error si el formato del hash es inválido
     pub fn verify_password(password: &str, hash: &str) -> Result<bool, String> {
-        let parsed_hash =
-            PasswordHash::new(hash).map_err(|e| format!("Hash inválido: {}", e))?;
+        let parsed_hash = PasswordHash::new(hash).map_err(|e| format!("Hash inválido: {}", e))?;
 
         let argon2 = Argon2::default();
 

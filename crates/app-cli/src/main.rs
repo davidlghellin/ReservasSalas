@@ -96,7 +96,9 @@ async fn handle_login(email: String, password: String) -> Result<()> {
         .context("Error al hacer login")?;
 
     let login_response = response.into_inner();
-    let usuario = login_response.usuario.expect("Usuario no encontrado en la respuesta");
+    let usuario = login_response
+        .usuario
+        .expect("Usuario no encontrado en la respuesta");
 
     println!("{}", "✅ Login exitoso".green().bold());
     println!("  {}: {}", "Usuario".bold(), usuario.id);
@@ -109,7 +111,10 @@ async fn handle_login(email: String, password: String) -> Result<()> {
         "\n{}",
         "💡 Guarda este token para usarlo en los comandos de sala:".dimmed()
     );
-    println!("  {}", format!("--token \"{}\"", login_response.token).dimmed());
+    println!(
+        "  {}",
+        format!("--token \"{}\"", login_response.token).dimmed()
+    );
 
     Ok(())
 }

@@ -232,9 +232,11 @@ dependencies = [
 name = "app-desktop-iced"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "iced",
  "notify-rust",
  "once_cell",
+ "reservas-grpc",
  "salas-grpc",
  "tokio",
  "tonic",
@@ -7811,7 +7813,11 @@ dependencies = [
  "async-trait",
  "chrono",
  "reservas-domain",
+ "salas-application",
+ "salas-domain",
  "tokio",
+ "usuarios-application",
+ "usuarios-domain",
 ]
 
 [[package]]
@@ -7836,6 +7842,8 @@ dependencies = [
  "tokio",
  "tonic",
  "tonic-build",
+ "usuarios-auth",
+ "usuarios-domain",
 ]
 
 [[package]]
@@ -7858,6 +7866,9 @@ version = "0.1.0"
 dependencies = [
  "app-web",
  "axum 0.8.7",
+ "reservas-application",
+ "reservas-grpc",
+ "reservas-infrastructure",
  "salas-api",
  "salas-application",
  "salas-grpc",
@@ -9837,6 +9848,7 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
+ "parking_lot 0.12.5",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.6.1",
@@ -10507,6 +10519,7 @@ dependencies = [
  "argon2",
  "chrono",
  "jsonwebtoken",
+ "rand_core 0.6.4",
  "serde",
  "usuarios-domain",
 ]

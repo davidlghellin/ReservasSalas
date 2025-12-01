@@ -43,29 +43,24 @@ pub fn salas_routes_with_auth(service: SharedSalaService) -> Router {
         // Rutas de lectura: requieren autenticación
         .route(
             "/salas",
-            get(listar_salas)
-                .layer(middleware::from_fn(auth_middleware)),
+            get(listar_salas).layer(middleware::from_fn(auth_middleware)),
         )
         .route(
             "/salas/{id}",
-            get(obtener_sala)
-                .layer(middleware::from_fn(auth_middleware)),
+            get(obtener_sala).layer(middleware::from_fn(auth_middleware)),
         )
         // Rutas de escritura: requieren rol de admin
         .route(
             "/salas",
-            post(crear_sala)
-                .layer(middleware::from_fn(admin_middleware)),
+            post(crear_sala).layer(middleware::from_fn(admin_middleware)),
         )
         .route(
             "/salas/{id}/activar",
-            put(activar_sala)
-                .layer(middleware::from_fn(admin_middleware)),
+            put(activar_sala).layer(middleware::from_fn(admin_middleware)),
         )
         .route(
             "/salas/{id}/desactivar",
-            put(desactivar_sala)
-                .layer(middleware::from_fn(admin_middleware)),
+            put(desactivar_sala).layer(middleware::from_fn(admin_middleware)),
         )
         .with_state(service)
 }

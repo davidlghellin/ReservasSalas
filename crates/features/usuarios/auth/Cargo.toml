@@ -13,3 +13,4 @@ serde = { workspace = true, features = ["derive"] }
 
 # Password hashing
 argon2 = { workspace = true }
+rand_core = { workspace = true }

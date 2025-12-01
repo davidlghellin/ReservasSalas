@@ -63,9 +63,8 @@ impl Reserva {
         let max_duracion = Duration::hours(8);
 
         if duracion < min_duracion || duracion > max_duracion {
-            errores.push(
-                "La duración de la reserva debe ser entre 15 minutos y 8 horas".to_string(),
-            );
+            errores
+                .push("La duración de la reserva debe ser entre 15 minutos y 8 horas".to_string());
         }
 
         // Si hay errores, devolver todos
@@ -242,7 +241,8 @@ mod tests {
         let inicio = ahora - Duration::hours(1);
         let fin = ahora + Duration::hours(1);
 
-        let errores = extraer_errores(Reserva::new("sala1".into(), "usuario1".into(), inicio, fin))?;
+        let errores =
+            extraer_errores(Reserva::new("sala1".into(), "usuario1".into(), inicio, fin))?;
         assert_contiene_error(&errores, &["inicio", "pasado"])
     }
 
@@ -252,7 +252,8 @@ mod tests {
         let inicio = ahora + Duration::hours(2);
         let fin = ahora + Duration::hours(1);
 
-        let errores = extraer_errores(Reserva::new("sala1".into(), "usuario1".into(), inicio, fin))?;
+        let errores =
+            extraer_errores(Reserva::new("sala1".into(), "usuario1".into(), inicio, fin))?;
         assert_contiene_error(&errores, &["fin", "posterior"])
     }
 
@@ -262,7 +263,8 @@ mod tests {
         let inicio = ahora + Duration::hours(1);
         let fin = inicio + Duration::minutes(10);
 
-        let errores = extraer_errores(Reserva::new("sala1".into(), "usuario1".into(), inicio, fin))?;
+        let errores =
+            extraer_errores(Reserva::new("sala1".into(), "usuario1".into(), inicio, fin))?;
         assert_contiene_error(&errores, &["duración", "15 minutos", "8 horas"])
     }
 
@@ -272,7 +274,8 @@ mod tests {
         let inicio = ahora + Duration::hours(1);
         let fin = inicio + Duration::hours(10);
 
-        let errores = extraer_errores(Reserva::new("sala1".into(), "usuario1".into(), inicio, fin))?;
+        let errores =
+            extraer_errores(Reserva::new("sala1".into(), "usuario1".into(), inicio, fin))?;
         assert_contiene_error(&errores, &["duración", "15 minutos", "8 horas"])
     }
 

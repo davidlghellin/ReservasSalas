@@ -10,9 +10,7 @@ use salas_grpc::proto::{
     sala_service_client::SalaServiceClient, ActivarSalaRequest, CrearSalaRequest,
     DesactivarSalaRequest, ListarSalasRequest,
 };
-use usuarios_grpc::proto::{
-    usuario_service_client::UsuarioServiceClient, LoginRequest,
-};
+use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest};
 
 const GRPC_URL: &str = "http://localhost:50051";
 
@@ -36,7 +34,9 @@ fn main() -> Result<(), slint::PlatformError> {
             cargar_salas_ui(&ui, &salas_model);
         }
         Err(e) => {
-            ui.set_mensaje(format!("⚠️ Login automático falló: {}. Funcionalidad limitada.", e).into());
+            ui.set_mensaje(
+                format!("⚠️ Login automático falló: {}. Funcionalidad limitada.", e).into(),
+            );
         }
     }
 
@@ -62,7 +62,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 return;
             }
 
-            match crear_sala(&nombre.to_string(), capacidad as u32) {
+            match crear_sala(nombre.as_ref(), capacidad as u32) {
                 Ok(_) => {
                     ui.set_mensaje(format!("✅ Sala '{}' creada correctamente", nombre).into());
                     ui.set_nuevo_nombre("".into());
@@ -89,7 +89,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let ui = ui_weak.unwrap();
             ui.set_loading(true);
 
-            match activar_sala(&id.to_string()) {
+            match activar_sala(id.as_ref()) {
                 Ok(_) => {
                     ui.set_mensaje("✅ Sala activada correctamente".into());
                     cargar_salas_ui(&ui, &salas_model);
@@ -112,7 +112,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let ui = ui_weak.unwrap();
             ui.set_loading(true);
 
-            match desactivar_sala(&id.to_string()) {
+            match desactivar_sala(id.as_ref()) {
                 Ok(_) => {
                     ui.set_mensaje("✅ Sala desactivada correctamente".into());
                     cargar_salas_ui(&ui, &salas_model);
@@ -276,9 +276,7 @@ fn activar_sala(id: &str) -> Result<SalaDto, String> {
             .await
             .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-        let mut request = Request::new(ActivarSalaRequest {
-            id: id.to_string(),
-        });
+        let mut request = Request::new(ActivarSalaRequest { id: id.to_string() });
         add_auth_token(&mut request)?;
 
         let response = client
@@ -304,9 +302,7 @@ fn desactivar_sala(id: &str) -> Result<SalaDto, String> {
             .await
             .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
 
-        let mut request = Request::new(DesactivarSalaRequest {
-            id: id.to_string(),
-        });
+        let mut request = Request::new(DesactivarSalaRequest { id: id.to_string() });
         add_auth_token(&mut request)?;
 
         let response = client

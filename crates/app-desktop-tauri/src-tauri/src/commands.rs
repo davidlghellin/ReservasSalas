@@ -114,8 +114,10 @@ pub async fn login_usuario(
     backend: State<'_, BackendApi>,
     logger: State<'_, Logger>,
 ) -> Result<crate::models::LoginResponse, String> {
-    use usuarios_grpc::proto::{usuario_service_client::UsuarioServiceClient, LoginRequest as GrpcLoginRequest};
     use tonic::Request;
+    use usuarios_grpc::proto::{
+        usuario_service_client::UsuarioServiceClient, LoginRequest as GrpcLoginRequest,
+    };
 
     logger.info(&format!("Iniciando login para: {}", request.email));
 
@@ -131,11 +133,10 @@ pub async fn login_usuario(
         password: request.password,
     });
 
-    let response = client.login(grpc_request).await
-        .map_err(|e| {
-            logger.error(&format!("Error en login gRPC: {}", e));
-            format!("Error al hacer login: {}", e)
-        })?;
+    let response = client.login(grpc_request).await.map_err(|e| {
+        logger.error(&format!("Error en login gRPC: {}", e));
+        format!("Error al hacer login: {}", e)
+    })?;
 
     let login_response = response.into_inner();
     let usuario_proto = login_response.usuario.ok_or_else(|| {

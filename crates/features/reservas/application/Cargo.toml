@@ -5,8 +5,12 @@ edition = "2021"
 
 [dependencies]
 reservas-domain = { path = "../domain" }
+salas-application = { path = "../../salas/application" }
+usuarios-application = { path = "../../usuarios/application" }
 async-trait = { workspace = true }
 chrono = { workspace = true }
 
 [dev-dependencies]
-tokio = { workspace = true}
+salas-domain = { path = "../../salas/domain" }
+usuarios-domain = { path = "../../usuarios/domain" }
+tokio = { workspace = true, features = ["full"] }

@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use tonic::{Request, Status};
 use usuarios_auth::jwt::{Claims, JwtService};
 use usuarios_domain::Rol;
@@ -101,7 +103,9 @@ impl<T> RequestAuthExt for Request<T> {
         let user = self.require_auth_user()?;
 
         if user.rol != Rol::Admin {
-            return Err(Status::permission_denied("Se requiere rol de administrador"));
+            return Err(Status::permission_denied(
+                "Se requiere rol de administrador",
+            ));
         }
 
         Ok(user)
@@ -119,10 +123,7 @@ mod tests {
         let result = extract_auth_user(&request);
 
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().code(),
-            tonic::Code::Unauthenticated
-        );
+        assert_eq!(result.unwrap_err().code(), tonic::Code::Unauthenticated);
     }
 
     #[test]
@@ -135,36 +136,28 @@ mod tests {
         let result = extract_auth_user(&request);
 
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().code(),
-            tonic::Code::Unauthenticated
-        );
+        assert_eq!(result.unwrap_err().code(), tonic::Code::Unauthenticated);
     }
 
     #[test]
     fn test_extract_auth_user_token_invalido() {
         let mut request: Request<()> = Request::new(());
-        request
-            .metadata_mut()
-            .insert(
-                "authorization",
-                MetadataValue::from_static("Bearer invalid.token.here"),
-            );
+        request.metadata_mut().insert(
+            "authorization",
+            MetadataValue::from_static("Bearer invalid.token.here"),
+        );
 
         let result = extract_auth_user(&request);
 
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().code(),
-            tonic::Code::Unauthenticated
-        );
+        assert_eq!(result.unwrap_err().code(), tonic::Code::Unauthenticated);
     }
 
     #[test]
     fn test_extract_auth_user_token_valido() {
         // Generar un token válido
-        let token = JwtService::generate_token("user-123", "test@example.com", Rol::Usuario)
-            .unwrap();
+        let token =
+            JwtService::generate_token("user-123", "test@example.com", Rol::Usuario).unwrap();
 
         let mut request: Request<()> = Request::new(());
         let metadata_value = MetadataValue::try_from(format!("Bearer {}", token)).unwrap();
@@ -183,8 +176,8 @@ mod tests {
 
     #[test]
     fn test_extract_admin_user_sin_permisos() {
-        let token = JwtService::generate_token("user-123", "user@example.com", Rol::Usuario)
-            .unwrap();
+        let token =
+            JwtService::generate_token("user-123", "user@example.com", Rol::Usuario).unwrap();
 
         let mut request: Request<()> = Request::new(());
         let metadata_value = MetadataValue::try_from(format!("Bearer {}", token)).unwrap();
@@ -195,16 +188,13 @@ mod tests {
         let result = extract_admin_user(&request);
 
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().code(),
-            tonic::Code::PermissionDenied
-        );
+        assert_eq!(result.unwrap_err().code(), tonic::Code::PermissionDenied);
     }
 
     #[test]
     fn test_extract_admin_user_con_permisos() {
-        let token = JwtService::generate_token("admin-123", "admin@example.com", Rol::Admin)
-            .unwrap();
+        let token =
+            JwtService::generate_token("admin-123", "admin@example.com", Rol::Admin).unwrap();
 
         let mut request: Request<()> = Request::new(());
         let metadata_value = MetadataValue::try_from(format!("Bearer {}", token)).unwrap();

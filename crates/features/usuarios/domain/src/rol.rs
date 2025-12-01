@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 /// Roles de usuario en el sistema
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
+
 pub enum Rol {
     /// Administrador del sistema - puede gestionar salas y usuarios
     Admin,
     /// Usuario normal - puede crear y gestionar sus propias reservas
+    #[default]
     Usuario,
 }
 
@@ -24,7 +27,7 @@ impl Rol {
     }
 
     /// Crea un Rol desde un string
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "admin" => Some(Rol::Admin),
             "usuario" => Some(Rol::Usuario),
@@ -32,10 +35,10 @@ impl Rol {
         }
     }
 }
-
-impl Default for Rol {
-    fn default() -> Self {
-        Rol::Usuario
+impl FromStr for Rol {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Rol::from_str_opt(s).ok_or(())
     }
 }
 
@@ -57,11 +60,11 @@ mod tests {
 
     #[test]
     fn test_from_str() {
-        assert_eq!(Rol::from_str("admin"), Some(Rol::Admin));
-        assert_eq!(Rol::from_str("ADMIN"), Some(Rol::Admin));
-        assert_eq!(Rol::from_str("usuario"), Some(Rol::Usuario));
-        assert_eq!(Rol::from_str("USUARIO"), Some(Rol::Usuario));
-        assert_eq!(Rol::from_str("invalid"), None);
+        assert_eq!(Rol::from_str_opt("admin"), Some(Rol::Admin));
+        assert_eq!(Rol::from_str_opt("ADMIN"), Some(Rol::Admin));
+        assert_eq!(Rol::from_str_opt("usuario"), Some(Rol::Usuario));
+        assert_eq!(Rol::from_str_opt("USUARIO"), Some(Rol::Usuario));
+        assert_eq!(Rol::from_str_opt("invalid"), None);
     }
 
     #[test]

@@ -74,8 +74,8 @@ impl<R: UsuarioRepository> AuthService for AuthServiceImpl<R> {
         }
 
         // Hashear contraseña
-        let password_hash = PasswordService::hash_password(&password)
-            .map_err(|e| UsuarioError::ErrorRepositorio(e))?;
+        let password_hash =
+            PasswordService::hash_password(&password).map_err(UsuarioError::ErrorRepositorio)?;
 
         // Crear usuario
         let rol = rol.unwrap_or(Rol::Usuario);
@@ -86,7 +86,7 @@ impl<R: UsuarioRepository> AuthService for AuthServiceImpl<R> {
 
         // Generar token JWT
         let token = JwtService::generate_token(&usuario.id, &usuario.email, usuario.rol.clone())
-            .map_err(|e| UsuarioError::ErrorRepositorio(e))?;
+            .map_err(UsuarioError::ErrorRepositorio)?;
 
         Ok(RegisterResponse {
             token,
@@ -109,7 +109,7 @@ impl<R: UsuarioRepository> AuthService for AuthServiceImpl<R> {
 
         // Verificar contraseña
         let password_valida = PasswordService::verify_password(&password, &usuario.password_hash)
-            .map_err(|e| UsuarioError::ErrorRepositorio(e))?;
+            .map_err(UsuarioError::ErrorRepositorio)?;
 
         if !password_valida {
             return Err(UsuarioError::CredencialesInvalidas);
@@ -117,7 +117,7 @@ impl<R: UsuarioRepository> AuthService for AuthServiceImpl<R> {
 
         // Generar token JWT
         let token = JwtService::generate_token(&usuario.id, &usuario.email, usuario.rol.clone())
-            .map_err(|e| UsuarioError::ErrorRepositorio(e))?;
+            .map_err(UsuarioError::ErrorRepositorio)?;
 
         Ok(LoginResponse {
             token,
@@ -127,8 +127,8 @@ impl<R: UsuarioRepository> AuthService for AuthServiceImpl<R> {
 
     async fn validate_token(&self, token: String) -> Result<UsuarioPublico, UsuarioError> {
         // Validar token JWT
-        let claims = JwtService::validate_token(&token)
-            .map_err(|_| UsuarioError::CredencialesInvalidas)?;
+        let claims =
+            JwtService::validate_token(&token).map_err(|_| UsuarioError::CredencialesInvalidas)?;
 
         // Obtener usuario del repositorio
         let usuario = self
@@ -164,7 +164,7 @@ impl<R: UsuarioRepository> AuthService for AuthServiceImpl<R> {
         // Verificar contraseña actual
         let password_valida =
             PasswordService::verify_password(&old_password, &usuario.password_hash)
-                .map_err(|e| UsuarioError::ErrorRepositorio(e))?;
+                .map_err(UsuarioError::ErrorRepositorio)?;
 
         if !password_valida {
             return Err(UsuarioError::CredencialesInvalidas);
@@ -172,7 +172,7 @@ impl<R: UsuarioRepository> AuthService for AuthServiceImpl<R> {
 
         // Hashear nueva contraseña
         let new_password_hash = PasswordService::hash_password(&new_password)
-            .map_err(|e| UsuarioError::ErrorRepositorio(e))?;
+            .map_err(UsuarioError::ErrorRepositorio)?;
 
         // Actualizar usuario
         usuario.actualizar_password(new_password_hash);
@@ -396,7 +396,10 @@ mod tests {
 
         // Verificar que el login con la nueva contraseña funciona
         let login_result = service
-            .login("change@example.com".to_string(), "newpassword123".to_string())
+            .login(
+                "change@example.com".to_string(),
+                "newpassword123".to_string(),
+            )
             .await;
 
         assert!(login_result.is_ok());

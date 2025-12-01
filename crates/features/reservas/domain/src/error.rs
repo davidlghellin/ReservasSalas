@@ -28,7 +28,10 @@ impl fmt::Display for ReservaError {
                 write!(f, "La fecha de fin debe ser posterior a la fecha de inicio")
             }
             ReservaError::DuracionInvalida => {
-                write!(f, "La duración de la reserva debe ser entre 15 minutos y 8 horas")
+                write!(
+                    f,
+                    "La duración de la reserva debe ser entre 15 minutos y 8 horas"
+                )
             }
             ReservaError::NoEncontrada => write!(f, "Reserva no encontrada"),
             ReservaError::ErrorRepositorio(msg) => write!(f, "Error en repositorio: {}", msg),

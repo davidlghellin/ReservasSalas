@@ -14,6 +14,7 @@ struct Sala {
     activa: bool,
 }
 
+#[allow(dead_code)]
 struct UsuarioInfo {
     id: String,
     nombre: String,
@@ -125,114 +126,100 @@ async fn main() -> std::io::Result<()> {
                         password,
                         active_field,
                         error,
-                    } => {
-                        match key.code {
-                            event::KeyCode::Tab => {
-                                *active_field = match active_field {
-                                    LoginField::Email => LoginField::Password,
-                                    LoginField::Password => LoginField::Email,
-                                };
-                                *error = None;
-                            }
-                            event::KeyCode::Enter => {
-                                if email.is_empty() || password.is_empty() {
-                                    *error = Some("Email y contraseña son requeridos".to_string());
-                                } else {
-                                    match login_usuario(email.clone(), password.clone()).await {
-                                        Ok((usuario, token)) => {
-                                            state = AppState::Authenticated { usuario, token };
-                                        }
-                                        Err(e) => {
-                                            *error = Some(e);
-                                        }
-                                    }
-                                }
-                            }
-                            event::KeyCode::Backspace => {
-                                match active_field {
-                                    LoginField::Email => {
-                                        email.pop();
-                                    }
-                                    LoginField::Password => {
-                                        password.pop();
-                                    }
-                                }
-                                *error = None;
-                            }
-                            event::KeyCode::Char(c) => {
-                                match active_field {
-                                    LoginField::Email => email.push(c),
-                                    LoginField::Password => password.push(c),
-                                }
-                                *error = None;
-                            }
-                            event::KeyCode::Esc => {
-                                break;
-                            }
-                            _ => {}
+                    } => match key.code {
+                        event::KeyCode::Tab => {
+                            *active_field = match active_field {
+                                LoginField::Email => LoginField::Password,
+                                LoginField::Password => LoginField::Email,
+                            };
+                            *error = None;
                         }
-                    }
-                    AppState::Authenticated { usuario: _, token } => {
-                        match key.code {
-                            event::KeyCode::Enter | event::KeyCode::Char(' ') => {
-                                state = AppState::Menu {
-                                    token: token.clone(),
-                                };
-                            }
-                            event::KeyCode::Esc => {
-                                break;
-                            }
-                            _ => {}
-                        }
-                    }
-                    AppState::Menu { token } => {
-                        match key.code {
-                            event::KeyCode::Char('1') => {
-                                match listar_salas(token).await {
-                                    Ok(salas) => {
-                                        state = AppState::ListarSalas {
-                                            salas,
-                                            token: token.clone(),
-                                        };
+                        event::KeyCode::Enter => {
+                            if email.is_empty() || password.is_empty() {
+                                *error = Some("Email y contraseña son requeridos".to_string());
+                            } else {
+                                match login_usuario(email.clone(), password.clone()).await {
+                                    Ok((usuario, token)) => {
+                                        state = AppState::Authenticated { usuario, token };
                                     }
                                     Err(e) => {
-                                        state = AppState::Error {
-                                            message: e,
-                                            token: Some(token.clone()),
-                                        };
+                                        *error = Some(e);
                                     }
                                 }
                             }
-                            event::KeyCode::Char('q') => {
-                                break;
-                            }
-                            _ => {}
                         }
-                    }
-                    AppState::ListarSalas { token, .. } => {
-                        match key.code {
-                            event::KeyCode::Char('q') | event::KeyCode::Esc => {
-                                state = AppState::Menu {
+                        event::KeyCode::Backspace => {
+                            match active_field {
+                                LoginField::Email => {
+                                    email.pop();
+                                }
+                                LoginField::Password => {
+                                    password.pop();
+                                }
+                            }
+                            *error = None;
+                        }
+                        event::KeyCode::Char(c) => {
+                            match active_field {
+                                LoginField::Email => email.push(c),
+                                LoginField::Password => password.push(c),
+                            }
+                            *error = None;
+                        }
+                        event::KeyCode::Esc => {
+                            break;
+                        }
+                        _ => {}
+                    },
+                    AppState::Authenticated { usuario: _, token } => match key.code {
+                        event::KeyCode::Enter | event::KeyCode::Char(' ') => {
+                            state = AppState::Menu {
+                                token: token.clone(),
+                            };
+                        }
+                        event::KeyCode::Esc => {
+                            break;
+                        }
+                        _ => {}
+                    },
+                    AppState::Menu { token } => match key.code {
+                        event::KeyCode::Char('1') => match listar_salas(token).await {
+                            Ok(salas) => {
+                                state = AppState::ListarSalas {
+                                    salas,
                                     token: token.clone(),
                                 };
                             }
-                            _ => {}
-                        }
-                    }
-                    AppState::Error { token, .. } => {
-                        match key.code {
-                            event::KeyCode::Char('q') | event::KeyCode::Esc => {
-                                if let Some(tok) = token {
-                                    state = AppState::Menu {
-                                        token: tok.clone(),
-                                    };
-                                } else {
-                                    break;
-                                }
+                            Err(e) => {
+                                state = AppState::Error {
+                                    message: e,
+                                    token: Some(token.clone()),
+                                };
                             }
-                            _ => {}
+                        },
+                        event::KeyCode::Char('q') => {
+                            break;
                         }
-                    }
+                        _ => {}
+                    },
+                    AppState::ListarSalas { token, .. } => match key.code {
+                        event::KeyCode::Char('q') | event::KeyCode::Esc => {
+                            state = AppState::Menu {
+                                token: token.clone(),
+                            };
+                        }
+                        _ => {}
+                    },
+                    AppState::Error { token, .. } => match key.code {
+                        event::KeyCode::Char('q') | event::KeyCode::Esc => {
+                            if let Some(tok) = token {
+                                state = AppState::Menu { token: tok.clone() };
+                            } else {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    },
                 }
             }
         }
@@ -264,9 +251,17 @@ fn render_login_screen(
 
     // Título
     let title = Paragraph::new("🔐 Iniciar Sesión")
-        .block(Block::default().borders(Borders::ALL).title("Sistema de Gestión de Salas"))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Sistema de Gestión de Salas"),
+        )
         .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        .style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
     f.render_widget(title, area[0]);
 
     // Email field
@@ -279,10 +274,9 @@ fn render_login_screen(
         .style(email_style);
     f.render_widget(email_input, area[1]);
     if matches!(active_field, LoginField::Email) {
-        f.set_cursor(
-            area[1].x + 7 + email.len() as u16,
-            area[1].y + 1,
-        );
+        let x = area[1].x + 7 + email.len() as u16;
+        let y = area[1].y + 1;
+        f.set_cursor_position(Position { x, y });
     }
 
     // Password field (mostrar asteriscos)
@@ -296,10 +290,9 @@ fn render_login_screen(
         .style(password_style);
     f.render_widget(password_input, area[2]);
     if matches!(active_field, LoginField::Password) {
-        f.set_cursor(
-            area[2].x + 10 + password.len() as u16,
-            area[2].y + 1,
-        );
+        let x = area[2].x + 10 + password.len() as u16;
+        let y = area[2].y + 1;
+        f.set_cursor_position(Position { x, y });
     }
 
     // Instrucciones
@@ -336,7 +329,11 @@ fn render_welcome_screen(f: &mut Frame, usuario: &UsuarioInfo) {
     let title = Paragraph::new("✅ Login Exitoso")
         .block(Block::default().borders(Borders::ALL))
         .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::Green).add_modifier(Modifier::BOLD));
+        .style(
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+        );
     f.render_widget(title, area[0]);
 
     let info = format!(
@@ -344,7 +341,11 @@ fn render_welcome_screen(f: &mut Frame, usuario: &UsuarioInfo) {
         usuario.nombre, usuario.email, usuario.rol
     );
     let info_para = Paragraph::new(info)
-        .block(Block::default().borders(Borders::ALL).title("Información de Usuario"))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Información de Usuario"),
+        )
         .alignment(Alignment::Center);
     f.render_widget(info_para, area[1]);
 
@@ -364,11 +365,15 @@ async fn login_usuario(email: String, password: String) -> Result<(UsuarioInfo, 
         password,
     });
 
-    let response = client.login(request).await
+    let response = client
+        .login(request)
+        .await
         .map_err(|e| format!("Error al hacer login: {}", e))?;
 
     let login_response = response.into_inner();
-    let usuario_proto = login_response.usuario.ok_or_else(|| "Respuesta sin usuario".to_string())?;
+    let usuario_proto = login_response
+        .usuario
+        .ok_or_else(|| "Respuesta sin usuario".to_string())?;
 
     let usuario = UsuarioInfo {
         id: usuario_proto.id,

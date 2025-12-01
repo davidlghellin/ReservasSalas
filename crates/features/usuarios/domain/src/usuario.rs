@@ -70,6 +70,7 @@ impl Usuario {
     }
 
     /// Crea un usuario con ID específico (para carga desde persistencia)
+    #[allow(clippy::too_many_arguments)]
     pub fn with_id(
         id: String,
         nombre: String,
@@ -174,7 +175,7 @@ pub fn validar_nombre(nombre: &str) -> Result<(), UsuarioError> {
     }
 
     let len = nombre_trimmed.len();
-    if len < NOMBRE_MIN_LENGTH || len > NOMBRE_MAX_LENGTH {
+    if !(NOMBRE_MIN_LENGTH..=NOMBRE_MAX_LENGTH).contains(&len) {
         return Err(UsuarioError::NombreLongitudInvalida {
             min: NOMBRE_MIN_LENGTH,
             max: NOMBRE_MAX_LENGTH,

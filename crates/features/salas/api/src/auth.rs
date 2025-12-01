@@ -1,7 +1,7 @@
 use axum::extract::Request;
 use axum::http::{header::AUTHORIZATION, StatusCode};
-use axum::response::{IntoResponse, Response};
 use axum::middleware::Next;
+use axum::response::{IntoResponse, Response};
 use usuarios_auth::jwt::JwtService;
 use usuarios_domain::Rol;
 
@@ -19,8 +19,7 @@ pub async fn auth_middleware(mut req: Request, next: Next) -> Result<Response, A
     let token = extract_token(&req)?;
 
     // Validar el token JWT
-    let claims = JwtService::validate_token(&token)
-        .map_err(|_| AuthError::InvalidToken)?;
+    let claims = JwtService::validate_token(&token).map_err(|_| AuthError::InvalidToken)?;
 
     // Convertir el rol string a enum Rol
     let rol = match claims.rol.as_str() {
@@ -46,8 +45,7 @@ pub async fn auth_middleware(mut req: Request, next: Next) -> Result<Response, A
 pub async fn admin_middleware(mut req: Request, next: Next) -> Result<Response, AuthError> {
     // Primero validar token (reutilizar lógica de auth_middleware)
     let token = extract_token(&req)?;
-    let claims = JwtService::validate_token(&token)
-        .map_err(|_| AuthError::InvalidToken)?;
+    let claims = JwtService::validate_token(&token).map_err(|_| AuthError::InvalidToken)?;
 
     let rol = match claims.rol.as_str() {
         "admin" => Rol::Admin,
@@ -118,10 +116,7 @@ impl IntoResponse for AuthError {
                 StatusCode::FORBIDDEN,
                 "Rol inválido en el token".to_string(),
             ),
-            AuthError::Unauthorized => (
-                StatusCode::UNAUTHORIZED,
-                "No autorizado".to_string(),
-            ),
+            AuthError::Unauthorized => (StatusCode::UNAUTHORIZED, "No autorizado".to_string()),
             AuthError::Forbidden => (
                 StatusCode::FORBIDDEN,
                 "Se requiere rol de administrador".to_string(),
@@ -142,4 +137,3 @@ impl RequestExt for Request {
         self.extensions().get::<AuthUser>()
     }
 }
-
