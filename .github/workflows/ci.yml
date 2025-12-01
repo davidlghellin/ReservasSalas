@@ -45,6 +45,10 @@ jobs:
           restore-keys: |
             cargo-${{ matrix.rust }}-
 
+      - name: Install protoc
+        id: protoc
+        uses: arduino/setup-protoc@v3
+
       - name: Install Rust toolchains
         run: |
           rustup toolchain install stable --profile default --component llvm-tools-preview
