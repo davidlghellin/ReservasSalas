@@ -10,7 +10,7 @@ path = "src/main.rs"
 [dependencies]
 ratatui = { workspace = true }
 crossterm = { workspace = true }
-tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+tokio = { workspace = true }
 tonic = { workspace = true }
 
 # Dependencias locales
