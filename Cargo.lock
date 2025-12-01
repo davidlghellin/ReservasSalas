@@ -7611,6 +7611,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "reservas-grpc"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "prost",
+ "reservas-application",
+ "reservas-domain",
+ "tokio",
+ "tonic",
+ "tonic-build",
+]
+
+[[package]]
+name = "reservas-infrastructure"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "reservas-application",
+ "reservas-domain",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "reservas-salas"
 version = "0.1.0"
 dependencies = [
