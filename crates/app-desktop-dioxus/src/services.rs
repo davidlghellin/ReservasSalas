@@ -1,5 +1,6 @@
 use reservas_grpc::proto::{
-    reserva_service_client::ReservaServiceClient, ListarReservasRequest, Reserva as ProtoReserva,
+    reserva_service_client::ReservaServiceClient, CancelarReservaRequest, CrearReservaRequest,
+    ListarReservasRequest, Reserva as ProtoReserva,
 };
 use salas_grpc::proto::{
     sala_service_client::SalaServiceClient, ActivarSalaRequest, CrearSalaRequest,
@@ -178,4 +179,59 @@ pub async fn listar_reservas(token: &str) -> Result<Vec<ProtoReserva>, String> {
         .map_err(|e| format!("Error gRPC: {}", e))?;
 
     Ok(response.into_inner().reservas)
+}
+
+pub async fn crear_reserva(
+    sala_id: &str,
+    usuario_id: &str,
+    fecha_inicio: &str,
+    fecha_fin: &str,
+    token: &str,
+) -> Result<ProtoReserva, String> {
+    let mut client = ReservaServiceClient::connect(GRPC_URL)
+        .await
+        .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+    let mut request = Request::new(CrearReservaRequest {
+        sala_id: sala_id.to_string(),
+        usuario_id: usuario_id.to_string(),
+        fecha_inicio: fecha_inicio.to_string(),
+        fecha_fin: fecha_fin.to_string(),
+    });
+
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header: {}", e))?;
+    request.metadata_mut().insert("authorization", auth_value);
+
+    let response = client
+        .crear_reserva(request)
+        .await
+        .map_err(|e| format!("Error gRPC: {}", e))?;
+
+    response
+        .into_inner()
+        .reserva
+        .ok_or_else(|| "Respuesta sin reserva".to_string())
+}
+
+pub async fn cancelar_reserva(id: &str, token: &str) -> Result<ProtoReserva, String> {
+    let mut client = ReservaServiceClient::connect(GRPC_URL)
+        .await
+        .map_err(|e| format!("Error de conexión gRPC: {}", e))?;
+
+    let mut request = Request::new(CancelarReservaRequest { id: id.to_string() });
+
+    let auth_value = MetadataValue::try_from(format!("Bearer {}", token))
+        .map_err(|e| format!("Error al crear header: {}", e))?;
+    request.metadata_mut().insert("authorization", auth_value);
+
+    let response = client
+        .cancelar_reserva(request)
+        .await
+        .map_err(|e| format!("Error gRPC: {}", e))?;
+
+    response
+        .into_inner()
+        .reserva
+        .ok_or_else(|| "Respuesta sin reserva".to_string())
 }

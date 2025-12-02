@@ -24,3 +24,10 @@ pub enum AppState {
     Login,
     Authenticated(UsuarioInfo),
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Tab {
+    Salas,
+    Reservas,
+    Calendario,
+}
