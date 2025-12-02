@@ -385,6 +385,282 @@ body {
     margin-top: 0.5rem;
 }
 
+/* Vista Selector */
+.vista-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.vista-selector button {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Calendario Container */
+.calendario-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    margin-bottom: 2rem;
+}
+
+/* Calendario Diario */
+.calendario-diario {
+    width: 100%;
+}
+
+.calendario-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.calendario-header h2 {
+    color: #667eea;
+    font-size: 1.75rem;
+}
+
+.franjas-horarias {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.franja-horaria {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+    min-height: 80px;
+}
+
+.hora-label {
+    width: 80px;
+    font-weight: 600;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 1.1rem;
+}
+
+.salas-en-hora {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.sala-slot {
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 2px solid;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.sala-slot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sala-slot.libre {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.sala-slot.reserva-activa {
+    background: #fff3cd;
+    border-color: #ffc107;
+}
+
+.sala-slot.reserva-cancelada {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+.sala-slot.reserva-completada {
+    background: #d1ecf1;
+    border-color: #17a2b8;
+}
+
+.sala-nombre {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.reserva-info {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.disponible {
+    font-size: 0.85rem;
+    color: #28a745;
+    font-weight: 600;
+}
+
+/* Calendario Semanal */
+.calendario-semanal {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.grid-semanal {
+    min-width: 800px;
+}
+
+.dias-header {
+    display: grid;
+    grid-template-columns: 150px repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.sala-column-header {
+    font-weight: 700;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+}
+
+.dia-header {
+    text-align: center;
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.dia-nombre {
+    color: #667eea;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.dia-fecha {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.fila-sala {
+    display: grid;
+    grid-template-columns: 150px repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.sala-nombre-col {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.capacidad-text {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: normal;
+}
+
+.celda-dia {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0.5rem;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.celda-dia:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.sin-reservas {
+    color: #28a745;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.reservas-dia {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.reserva-item {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Leyenda */
+.leyenda {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e0e0e0;
+}
+
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.color-box {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 2px solid;
+}
+
+.color-box.libre {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.color-box.reserva-activa {
+    background: #fff3cd;
+    border-color: #ffc107;
+}
+
+.color-box.reserva-cancelada {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .container {
@@ -423,5 +699,18 @@ body {
 
     .login-box {
         padding: 2rem;
+    }
+
+    .salas-en-hora {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-semanal {
+        min-width: 1000px;
+    }
+
+    .calendario-container {
+        overflow-x: auto;
+        padding: 1rem;
     }
 }

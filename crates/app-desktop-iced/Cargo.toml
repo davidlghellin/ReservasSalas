@@ -13,6 +13,7 @@ notify-rust = { workspace = true }
 once_cell = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 
 # Usar el crate gRPC local
 salas-grpc = { path = "../features/salas/grpc" }
