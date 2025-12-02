@@ -12,7 +12,9 @@ dioxus = { workspace = true, features = ["desktop"] }
 dioxus-logger = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 tonic = { workspace = true }
+chrono = { workspace = true }
 
 # Dependencias locales
 salas-grpc = { path = "../features/salas/grpc" }
 usuarios-grpc = { path = "../features/usuarios/grpc" }
+reservas-grpc = { path = "../features/reservas/grpc" }

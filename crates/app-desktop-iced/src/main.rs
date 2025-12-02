@@ -1,37 +1,38 @@
 #![allow(clippy::needless_return)]
 
+mod calendario;
+mod models;
+mod services;
+
+use calendario::VistaCalendario;
+use chrono::{Duration as ChronoDuration, Local};
 use iced::widget::{button, column, container, row, scrollable, text, text_input, Column};
 use iced::{Alignment, Element, Length, Task, Theme};
 
+use reservas_grpc::proto::Reserva as ProtoReserva;
+use salas_grpc::proto::SalaResponse;
+
+use models::{SalaDto, GRPC_URL};
+
+use once_cell::sync::Lazy;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tonic::transport::Channel;
 use tonic::Request;
 
 use salas_grpc::proto::sala_service_client::SalaServiceClient;
 use salas_grpc::proto::{
-    ActivarSalaRequest, CrearSalaRequest, DesactivarSalaRequest, ListarSalasRequest, SalaResponse,
+    ActivarSalaRequest, CrearSalaRequest, DesactivarSalaRequest, ListarSalasRequest,
 };
 
 use usuarios_grpc::proto::usuario_service_client::UsuarioServiceClient;
 use usuarios_grpc::proto::{LoginRequest, LoginResponse};
 
 use reservas_grpc::proto::reserva_service_client::ReservaServiceClient;
-use reservas_grpc::proto::{
-    CancelarReservaRequest, CrearReservaRequest, ListarReservasRequest, Reserva as ProtoReserva,
-};
-
-use chrono::{Duration as ChronoDuration, Local};
-
-use once_cell::sync::Lazy;
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use reservas_grpc::proto::{CancelarReservaRequest, CrearReservaRequest, ListarReservasRequest};
 
 #[cfg(not(target_os = "macos"))]
 use notify_rust::Notification;
-
-const GRPC_URL: &str = "http://localhost:50051";
-
-// Alias para simplificar el código de la UI
-type SalaDto = SalaResponse;
 
 // Tipo para el cliente compartido de salas
 type SharedSalaClient = Arc<Mutex<Option<SalaServiceClient<Channel>>>>;
@@ -97,12 +98,16 @@ enum Message {
     CrearReserva,
     CancelarReserva(String),
     ActualizarReservas,
+
+    // Mensajes de calendario
+    CambiarVistaCalendario(VistaCalendario),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Tab {
     Salas,
     Reservas,
+    Calendario,
 }
 
 #[derive(Debug, Clone)]
@@ -134,6 +139,10 @@ enum AppState {
         sala_seleccionada: String,
         fecha_inicio: String,
         fecha_fin: String,
+
+        // Estado de calendario
+        vista_calendario: VistaCalendario,
+        fecha_calendario: chrono::DateTime<Local>,
 
         mensaje: String,
         loading: bool,
@@ -222,6 +231,8 @@ impl App {
                     sala_seleccionada: String::new(),
                     fecha_inicio: fecha_inicio_default,
                     fecha_fin: fecha_fin_default,
+                    vista_calendario: VistaCalendario::Diaria,
+                    fecha_calendario: Local::now(),
                     mensaje: String::new(),
                     loading: false,
                 };
@@ -455,6 +466,13 @@ impl App {
                             Task::perform(listar_reservas(), Message::ReservasCargadas),
                         ])
                     }
+                    Tab::Calendario => {
+                        // Cargar tanto salas como reservas para el calendario
+                        Task::batch(vec![
+                            Task::perform(listar_salas(), Message::SalasCargadas),
+                            Task::perform(listar_reservas(), Message::ReservasCargadas),
+                        ])
+                    }
                 }
             }
 
@@ -622,6 +640,17 @@ impl App {
                 }
                 Task::perform(listar_reservas(), Message::ReservasCargadas)
             }
+
+            // Mensajes de calendario
+            Message::CambiarVistaCalendario(vista) => {
+                if let AppState::Authenticated {
+                    vista_calendario, ..
+                } = &mut self.state
+                {
+                    *vista_calendario = vista;
+                }
+                Task::none()
+            }
         }
     }
 
@@ -643,19 +672,23 @@ impl App {
                 sala_seleccionada,
                 fecha_inicio,
                 fecha_fin,
+                vista_calendario,
+                fecha_calendario,
                 mensaje,
                 loading,
             } => self.view_main(
-                usuario,
+                usuario.as_ref().clone(),
                 *tab_actual,
-                salas,
-                nuevo_nombre,
-                nueva_capacidad,
-                reservas,
-                sala_seleccionada,
-                fecha_inicio,
-                fecha_fin,
-                mensaje,
+                salas.clone(),
+                nuevo_nombre.clone(),
+                nueva_capacidad.clone(),
+                reservas.clone(),
+                sala_seleccionada.clone(),
+                fecha_inicio.clone(),
+                fecha_fin.clone(),
+                *vista_calendario,
+                *fecha_calendario,
+                mensaje.clone(),
                 *loading,
             ),
         }
@@ -724,20 +757,22 @@ impl App {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn view_main<'a>(
-        &'a self,
-        usuario: &'a UsuarioInfo,
+    fn view_main(
+        &self,
+        usuario: UsuarioInfo,
         tab_actual: Tab,
-        salas: &'a [SalaDto],
-        nuevo_nombre: &'a str,
-        nueva_capacidad: &'a str,
-        reservas: &'a [ProtoReserva],
-        sala_seleccionada: &'a str,
-        fecha_inicio: &'a str,
-        fecha_fin: &'a str,
-        mensaje: &'a str,
+        salas: Vec<SalaDto>,
+        nuevo_nombre: String,
+        nueva_capacidad: String,
+        reservas: Vec<ProtoReserva>,
+        sala_seleccionada: String,
+        fecha_inicio: String,
+        fecha_fin: String,
+        vista_calendario: VistaCalendario,
+        fecha_calendario: chrono::DateTime<Local>,
+        mensaje: String,
         loading: bool,
-    ) -> Element<'a, Message> {
+    ) -> Element<'static, Message> {
         let header = column![row![
             column![
                 text("🏢 Gestión de Salas").size(32).width(Length::Fill),
@@ -784,6 +819,13 @@ impl App {
             }))
             .on_press(Message::CambiarTab(Tab::Reservas))
             .padding(15),
+            button(text(if tab_actual == Tab::Calendario {
+                "📆 Calendario ✓"
+            } else {
+                "📆 Calendario"
+            }))
+            .on_press(Message::CambiarTab(Tab::Calendario))
+            .padding(15),
         ]
         .spacing(10)
         .padding(10);
@@ -817,6 +859,9 @@ impl App {
                 fecha_fin,
                 loading,
             ),
+            Tab::Calendario => {
+                self.view_calendario_tab(reservas, salas, vista_calendario, fecha_calendario)
+            }
         };
 
         let content = column![header, tabs, banner, mensaje_view, contenido]
@@ -831,21 +876,21 @@ impl App {
             .into()
     }
 
-    fn view_salas_tab<'a>(
-        &'a self,
-        salas: &'a [SalaDto],
-        nuevo_nombre: &'a str,
-        nueva_capacidad: &'a str,
+    fn view_salas_tab(
+        &self,
+        salas: Vec<SalaDto>,
+        nuevo_nombre: String,
+        nueva_capacidad: String,
         loading: bool,
-    ) -> Element<'a, Message> {
+    ) -> Element<'static, Message> {
         let form = column![
             text("➕ Nueva Sala").size(20),
             row![
-                text_input("Nombre de la sala", nuevo_nombre)
+                text_input("Nombre de la sala", &nuevo_nombre)
                     .on_input(Message::NombreChanged)
                     .padding(10)
                     .width(Length::FillPortion(3)),
-                text_input("Capacidad", nueva_capacidad)
+                text_input("Capacidad", &nueva_capacidad)
                     .on_input(Message::CapacidadChanged)
                     .padding(10)
                     .width(Length::FillPortion(1)),
@@ -895,16 +940,21 @@ impl App {
                 salas
                     .iter()
                     .map(|sala| {
-                        let badge = if sala.activa {
+                        let sala_nombre = sala.nombre.clone();
+                        let sala_id = sala.id.clone();
+                        let sala_capacidad = sala.capacidad;
+                        let sala_activa = sala.activa;
+
+                        let badge = if sala_activa {
                             text("✅ Activa")
                         } else {
                             text("⏸️ Inactiva")
                         };
 
-                        let action_button = if sala.activa {
+                        let action_button = if sala_activa {
                             button(text("⏸️ Desactivar"))
                                 .on_press_maybe(if !loading {
-                                    Some(Message::DesactivarSala(sala.id.clone()))
+                                    Some(Message::DesactivarSala(sala_id.clone()))
                                 } else {
                                     None
                                 })
@@ -912,7 +962,7 @@ impl App {
                         } else {
                             button(text("▶️ Activar"))
                                 .on_press_maybe(if !loading {
-                                    Some(Message::ActivarSala(sala.id.clone()))
+                                    Some(Message::ActivarSala(sala_id.clone()))
                                 } else {
                                     None
                                 })
@@ -922,11 +972,11 @@ impl App {
                         container(
                             row![
                                 column![
-                                    row![text(&sala.nombre).size(18), badge,]
+                                    row![text(sala_nombre).size(18), badge,]
                                         .spacing(10)
                                         .align_y(Alignment::Center),
-                                    text(format!("👥 Capacidad: {} personas", sala.capacidad)),
-                                    text(format!("ID: {}", sala.id)).size(12),
+                                    text(format!("👥 Capacidad: {} personas", sala_capacidad)),
+                                    text(format!("ID: {}", sala_id)).size(12),
                                 ]
                                 .spacing(8)
                                 .width(Length::Fill),
@@ -957,15 +1007,15 @@ impl App {
             .into()
     }
 
-    fn view_reservas_tab<'a>(
-        &'a self,
-        reservas: &'a [ProtoReserva],
-        salas: &'a [SalaDto],
-        sala_seleccionada: &'a str,
-        fecha_inicio: &'a str,
-        fecha_fin: &'a str,
+    fn view_reservas_tab(
+        &self,
+        reservas: Vec<ProtoReserva>,
+        salas: Vec<SalaDto>,
+        sala_seleccionada: String,
+        fecha_inicio: String,
+        fecha_fin: String,
         loading: bool,
-    ) -> Element<'a, Message> {
+    ) -> Element<'static, Message> {
         // Formulario para crear reserva
         let form = column![
             text("➕ Nueva Reserva").size(20),
@@ -978,16 +1028,16 @@ impl App {
                                 .iter()
                                 .filter(|s| s.activa)
                                 .map(|sala| {
+                                    let sala_id = sala.id.clone();
+                                    let sala_nombre = sala.nombre.clone();
+                                    let es_seleccionada = sala_seleccionada == sala_id;
+
                                     button(text(format!(
                                         "{} {}",
-                                        if sala_seleccionada == sala.id.as_str() {
-                                            "✓"
-                                        } else {
-                                            "○"
-                                        },
-                                        sala.nombre
+                                        if es_seleccionada { "✓" } else { "○" },
+                                        sala_nombre
                                     )))
-                                    .on_press(Message::SalaSeleccionadaChanged(sala.id.clone()))
+                                    .on_press(Message::SalaSeleccionadaChanged(sala_id))
                                     .padding(8)
                                     .width(Length::Fill)
                                     .into()
@@ -1002,11 +1052,11 @@ impl App {
                 .width(Length::FillPortion(2)),
                 column![
                     text("Fecha Inicio:").size(14),
-                    text_input("YYYY-MM-DDTHH:MM", fecha_inicio)
+                    text_input("YYYY-MM-DDTHH:MM", &fecha_inicio)
                         .on_input(Message::FechaInicioChanged)
                         .padding(10),
                     text("Fecha Fin:").size(14),
-                    text_input("YYYY-MM-DDTHH:MM", fecha_fin)
+                    text_input("YYYY-MM-DDTHH:MM", &fecha_fin)
                         .on_input(Message::FechaFinChanged)
                         .padding(10),
                     button(text(if loading {
@@ -1060,36 +1110,57 @@ impl App {
                 reservas
                     .iter()
                     .map(|reserva| {
+                        // Clonar datos necesarios de la reserva
+                        let reserva_id = reserva.id.clone();
+                        let sala_id = reserva.sala_id.clone();
+                        let fecha_inicio_str = reserva.fecha_inicio.clone();
+                        let fecha_fin_str = reserva.fecha_fin.clone();
+                        let estado = reserva.estado;
+
                         // Encontrar el nombre de la sala
                         let nombre_sala = salas
                             .iter()
-                            .find(|s| s.id == reserva.sala_id)
+                            .find(|s| s.id == sala_id)
                             .map(|s| s.nombre.clone())
                             .unwrap_or_else(|| "Sala desconocida".to_string());
 
-                        // Formatear las fechas
-                        let fecha_inicio_formatted =
-                            reserva.fecha_inicio.split('T').collect::<Vec<_>>();
-                        let fecha_fin_formatted = reserva.fecha_fin.split('T').collect::<Vec<_>>();
+                        // Formatear las fechas - convertir a String owned
+                        let fecha_inicio_parts: Vec<String> =
+                            fecha_inicio_str.split('T').map(|s| s.to_string()).collect();
+                        let fecha_fin_parts: Vec<String> =
+                            fecha_fin_str.split('T').map(|s| s.to_string()).collect();
 
-                        let estado_emoji = match reserva.estado {
+                        let fecha_inicio_date = fecha_inicio_parts.first()
+                            .map(|s| s.clone())
+                            .unwrap_or_else(|| "".to_string());
+                        let fecha_inicio_time = fecha_inicio_parts.get(1)
+                            .map(|s| s.clone())
+                            .unwrap_or_else(|| "".to_string());
+                        let fecha_fin_date = fecha_fin_parts.first()
+                            .map(|s| s.clone())
+                            .unwrap_or_else(|| "".to_string());
+                        let fecha_fin_time = fecha_fin_parts.get(1)
+                            .map(|s| s.clone())
+                            .unwrap_or_else(|| "".to_string());
+
+                        let estado_emoji = match estado {
                             0 => "✅", // Activa
                             1 => "❌", // Cancelada
                             2 => "✔️", // Completada
                             _ => "❓",
                         };
 
-                        let estado_text = match reserva.estado {
+                        let estado_text = match estado {
                             0 => "Activa",
                             1 => "Cancelada",
                             2 => "Completada",
                             _ => "Desconocida",
                         };
 
-                        let cancel_button = if reserva.estado == 0 {
+                        let cancel_button = if estado == 0 {
                             button(text("❌ Cancelar"))
                                 .on_press_maybe(if !loading {
-                                    Some(Message::CancelarReserva(reserva.id.clone()))
+                                    Some(Message::CancelarReserva(reserva_id.clone()))
                                 } else {
                                     None
                                 })
@@ -1109,12 +1180,12 @@ impl App {
                                     .align_y(Alignment::Center),
                                     text(format!(
                                         "📅 {} {} - {} {}",
-                                        fecha_inicio_formatted.first().unwrap_or(&""),
-                                        fecha_inicio_formatted.get(1).unwrap_or(&""),
-                                        fecha_fin_formatted.first().unwrap_or(&""),
-                                        fecha_fin_formatted.get(1).unwrap_or(&""),
+                                        fecha_inicio_date,
+                                        fecha_inicio_time,
+                                        fecha_fin_date,
+                                        fecha_fin_time,
                                     )),
-                                    text(format!("ID: {}", reserva.id)).size(12),
+                                    text(format!("ID: {}", reserva_id)).size(12),
                                 ]
                                 .spacing(8)
                                 .width(Length::Fill),
@@ -1143,6 +1214,62 @@ impl App {
             .spacing(20)
             .width(Length::Fill)
             .into()
+    }
+
+    fn view_calendario_tab(
+        &self,
+        reservas: Vec<ProtoReserva>,
+        salas: Vec<SalaDto>,
+        vista_calendario: VistaCalendario,
+        fecha_calendario: chrono::DateTime<Local>,
+    ) -> Element<'static, Message> {
+        let mut content = Column::new().spacing(15).padding(20).width(Length::Fill);
+
+        // Selector de vista
+        let vista_selector = row![
+            button(text(if vista_calendario == VistaCalendario::Diaria {
+                "📅 Vista Diaria ✓"
+            } else {
+                "📅 Vista Diaria"
+            }))
+            .on_press(Message::CambiarVistaCalendario(VistaCalendario::Diaria))
+            .padding(12),
+            button(text(if vista_calendario == VistaCalendario::Semanal {
+                "📆 Vista Semanal ✓"
+            } else {
+                "📆 Vista Semanal"
+            }))
+            .on_press(Message::CambiarVistaCalendario(VistaCalendario::Semanal))
+            .padding(12),
+        ]
+        .spacing(10);
+
+        content = content.push(vista_selector);
+
+        // Convertir SalaDto a SalaResponse para usar en las vistas de calendario
+        let salas_response: Vec<SalaResponse> = salas
+            .iter()
+            .map(|s| SalaResponse {
+                id: s.id.clone(),
+                nombre: s.nombre.clone(),
+                capacidad: s.capacidad,
+                activa: s.activa,
+            })
+            .collect();
+
+        // Calendario según la vista
+        let calendario_view = match vista_calendario {
+            VistaCalendario::Diaria => {
+                calendario::view_calendario_diario(reservas, salas_response.clone(), fecha_calendario)
+            }
+            VistaCalendario::Semanal => {
+                calendario::view_calendario_semanal(reservas, salas_response, fecha_calendario)
+            }
+        };
+
+        content = content.push(calendario_view);
+
+        content.into()
     }
 
     fn theme(&self) -> Theme {
